@@ -1,16 +1,25 @@
-import app from './app.js';
-import dotenv from 'dotenv';
-import connectDB from './config/db.js';
+import app from "./app.js";
+import dotenv from "dotenv";
+import connectDB from "./config/db.js";
 
-// Connect to MongoDB
+// Load env FIRST
 dotenv.config();
-connectDB();
-
 
 const PORT = process.env.PORT || 3000;
-console.log("MongoDB Connected");
 
+// Start server only after DB connects
+const startServer = async () => {
+  try {
+    await connectDB(); // wait for DB
+    console.log("MongoDB Connected ✅");
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT} 🚀`);
+    });
+  } catch (error) {
+    console.error("Server failed to start ❌", error.message);
+    process.exit(1);
+  }
+};
+
+startServer();

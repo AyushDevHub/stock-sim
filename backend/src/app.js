@@ -2,6 +2,7 @@ import express from "express";
 import authRoutes from "./routes/authRoutes.js";
 import tradeRoutes from "./routes/tradeRoutes.js";
 import portfolioRoutes from "./routes/portfolioRoutes.js";
+import stockRoutes from "./routes/stockRoutes.js";
 
 const app = express();
 
@@ -11,6 +12,7 @@ app.get("/health", (_, res) => res.json({ status: "ok" }));
 app.use("/auth", authRoutes);
 app.use("/trade", tradeRoutes);
 app.use("/portfolio", portfolioRoutes);
+app.use("/stocks", stockRoutes);
 
 // 404 handler
 app.use((_, res) => res.status(404).json({ message: "Route not found" }));

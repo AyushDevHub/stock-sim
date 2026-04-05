@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import tradeRoutes from "./routes/tradeRoutes.js";
 import portfolioRoutes from "./routes/portfolioRoutes.js";
@@ -7,6 +8,8 @@ import chartRoutes from "./routes/chartRoutes.js";
 import priceRoutes from "./routes/priceRoutes.js";
 
 const app = express();
+
+app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 
 app.get("/health", (_, res) => res.json({ status: "ok" }));

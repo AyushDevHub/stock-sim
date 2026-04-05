@@ -9,19 +9,16 @@ const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 const POLL_INTERVAL = parseInt(process.env.POLL_INTERVAL_MS) || 10000; // default 10s
 
-if (!MONGO_URI) {
+if (!MONGO_URI) { //checking in env
   console.error("MONGO_URI is not defined in .env");
   process.exit(1);
 }
 
-mongoose
+mongoose  // schema connecting to database
   .connect(MONGO_URI)
   .then(async () => {
     console.log("MongoDB connected");
-
-    // start price poller AFTER DB is connected (needs Stock model)
-    await startPricePoller(POLL_INTERVAL);
-
+    await startPricePoller(POLL_INTERVAL); //poll starts
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   })
   .catch((err) => {

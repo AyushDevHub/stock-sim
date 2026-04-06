@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useLayoutEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api.js";
 import { LandingNav } from "../../components/Navbar/Navbar.jsx";
@@ -45,9 +45,22 @@ export default function Landing() {
     const load = async () => {
       try {
         const { data } = await api.get("/prices");
-        setStocks(data.prices || []);
+        const incoming = data.prices || [];
+        setStocks((prev) => {
+          // If same length and same prices, return SAME reference → no re-render
+          if (
+            prev.length === incoming.length &&
+            prev.every(
+              (s, i) =>
+                s.price === incoming[i].price && s.symbol === incoming[i].symbol
+            )
+          ) {
+            return prev;
+          }
+          return incoming;
+        });
       } catch {
-        setStocks([]);
+        setStocks((prev) => prev); // never reset to [] on error
       }
     };
     load();
@@ -56,31 +69,37 @@ export default function Landing() {
   }, []);
 
   // RAF infinite scroll
-  useEffect(() => {
-    if (!stocks.length || !scrollRef.current) return;
-    const CARD_W = 188 + 14;
-    const totalW = CARD_W * stocks.length;
-    let pos = 0,
-      lastTime = null;
-    const SPEED = 40;
+ 
+  const posRef = useRef(0); // ← add this at the top of your component
 
-    const tick = (ts) => {
+  useLayoutEffect(() => {
+    if (!scrollRef.current || stocks.length === 0) return;
+
+    const el = scrollRef.current;
+    const CARD_WIDTH = 188;
+    const GAP = 14;
+    const SPEED = 40;
+    const singleWidth = stocks.length * CARD_WIDTH + (stocks.length - 1) * GAP;
+
+    let lastTime = null;
+    let rafId = null;
+
+    const tick = (now) => {
+      if (lastTime === null) lastTime = now;
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+
       if (!pauseRef.current) {
-        if (lastTime !== null) {
-          pos += SPEED * ((ts - lastTime) / 1000);
-          if (pos >= totalW) pos -= totalW;
-          if (scrollRef.current)
-            scrollRef.current.style.transform = `translateX(-${pos}px)`;
-        }
-        lastTime = ts;
-      } else {
-        lastTime = null;
+        posRef.current += SPEED * dt;
+        if (posRef.current >= singleWidth) posRef.current -= singleWidth;
+        el.style.transform = `translate3d(-${posRef.current}px, 0, 0)`;
       }
-      animRef.current = requestAnimationFrame(tick);
+
+      rafId = requestAnimationFrame(tick);
     };
 
-    animRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(animRef.current);
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
   }, [stocks]);
 
   // search debounce
@@ -105,7 +124,9 @@ export default function Landing() {
     return () => clearTimeout(id);
   }, [query]);
 
-  const loopStocks = [...stocks, ...stocks, ...stocks];
+  const loopStocks = useMemo(() => {
+    return [...stocks, ...stocks, ...stocks];
+  }, [stocks]);
 
   return (
     <div className={styles.page}>

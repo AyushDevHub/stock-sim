@@ -223,9 +223,13 @@
   .tickerStrip {
     display: flex;
     gap: 14px;
-    will-change: transform;
     padding: 8px 0 12px;
-    width: max-content;
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+  }
+  .tickerStrip > * {
+    flex: 0 0 auto;
   }
   .skeletonRow { display: flex; gap: 14px; padding: 8px 40px 12px; }
   

@@ -71,7 +71,7 @@ const refreshPrices = async () => {
 };
 
 // ── start / stop ───────────────────────────────────────────────────────────
-export const startPricePoller = async (intervalMs = 10000) => {
+export const startPricePoller = async (intervalMs = 1000) => {
   if (isPolling) return;
   isPolling = true;
 

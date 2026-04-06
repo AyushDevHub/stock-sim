@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg:      #080c0e;
+  --color-surface: #0d1417;
+  --color-border:  #1a2428;
+  --color-border2: #243035;
+  --color-text:    #c8d8de;
+  --color-muted:   #4a6370;
+  --color-green:   #00d68f;
+  --color-red:     #ff4757;
+  --color-amber:   #ffb800;
+  --color-blue:    #00b4d8;
+  --font-mono:    "IBM Plex Mono", monospace;
+  --font-display: "Syne", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background-color: #080c0e;
+  color: #c8d8de;
+  font-family: "IBM Plex Mono", monospace;
+  margin: 0;
+}
+
+@keyframes flashGreen {
+  0%   { background-color: rgba(0,214,143,0.25); }
+  100% { background-color: transparent; }
+}
+@keyframes flashRed {
+  0%   { background-color: rgba(255,71,87,0.25); }
+  100% { background-color: transparent; }
+}
+.flash-up   { animation: flashGreen 0.8s ease-out; }
+.flash-down { animation: flashRed   0.8s ease-out; }
+
+::-webkit-scrollbar       { width: 4px; }
+::-webkit-scrollbar-track { background: #080c0e; }
+::-webkit-scrollbar-thumb { background: #243035; border-radius: 2px; }

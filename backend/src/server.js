@@ -7,7 +7,7 @@ dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
-const POLL_INTERVAL = parseInt(process.env.POLL_INTERVAL_MS) || 10000; // default 10s
+const POLL_INTERVAL = parseInt(process.env.POLL_INTERVAL_MS) || 1000; // default 1s
 
 if (!MONGO_URI) { //checking in env
   console.error("MONGO_URI is not defined in .env");

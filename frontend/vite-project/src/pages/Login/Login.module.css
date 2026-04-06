@@ -1,0 +1,107 @@
+.page {
+    min-height: 100vh;
+    background: var(--color-bg);
+    display: flex;
+    font-family: var(--font-mono);
+    position: relative;
+    overflow: hidden;
+  }
+  .glow1 {
+    position: absolute; top: -10%; left: -10%;
+    width: 50vw; height: 50vw; border-radius: 50%;
+    background: radial-gradient(circle,rgba(99,102,241,0.1) 0%,transparent 70%);
+    pointer-events: none;
+  }
+  .glow2 {
+    position: absolute; bottom: -10%; right: -10%;
+    width: 40vw; height: 40vw; border-radius: 50%;
+    background: radial-gradient(circle,rgba(0,180,216,0.07) 0%,transparent 70%);
+    pointer-events: none;
+  }
+  .left {
+    flex: 1; display: flex; flex-direction: column;
+    justify-content: center;
+    padding: 48px clamp(32px,5vw,72px);
+    position: relative; z-index: 1;
+  }
+  .logoRow {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 48px; cursor: pointer; text-decoration: none;
+  }
+  .logoOrb {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg,#6366f1,#00b4d8);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 20px rgba(99,102,241,0.4);
+    font-family: var(--font-display); font-weight: 900;
+    font-size: 0.75rem; color: #fff;
+  }
+  .logoText { font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; color: var(--color-text); }
+  
+  .eyebrow { font-size: 0.6rem; color: var(--color-indigo); letter-spacing: 0.18em; margin-bottom: 12px; }
+  .heading {
+    font-family: var(--font-display); font-weight: 800;
+    font-size: clamp(1.8rem,3vw,2.6rem); color: var(--color-text);
+    margin: 0 0 16px; line-height: 1.1;
+  }
+  .headingGradient {
+    background: linear-gradient(135deg,#6366f1,#00b4d8,#00d68f);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .subtext { font-size: 0.78rem; color: var(--color-muted); line-height: 1.8; margin: 0; }
+  .statsRow { display: flex; gap: 32px; margin-top: 48px; }
+  .statVal { font-family: var(--font-display); font-size: 1.2rem; font-weight: 800; color: var(--color-text); }
+  .statLabel { font-size: 0.6rem; color: var(--color-muted); margin-top: 2px; letter-spacing: 0.1em; }
+  
+  .divider { width: 1px; background: rgba(255,255,255,0.05); flex-shrink: 0; }
+  
+  .right {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: clamp(32px,5vw,48px) clamp(20px,4vw,48px);
+    position: relative; z-index: 1; min-height: 100vh;
+  }
+  .formBox { width: 100%; max-width: 400px; }
+  .formTitle {
+    font-family: var(--font-display); font-weight: 800;
+    font-size: clamp(1.4rem,3vw,1.8rem); color: var(--color-text);
+    margin: 0 0 6px;
+  }
+  .formSub { font-size: 0.72rem; color: var(--color-muted); margin: 0 0 28px; }
+  .formLink { color: var(--color-indigo); text-decoration: none; font-weight: 600; }
+  
+  .fields { display: flex; flex-direction: column; gap: 16px; }
+  .fieldLabel { font-size: 0.62rem; color: var(--color-muted); letter-spacing: 0.1em; display: block; margin-bottom: 6px; }
+  .fieldInput {
+    width: 100%; background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-md);
+    padding: 12px 14px; color: var(--color-text); outline: none;
+    font-family: var(--font-mono); font-size: 0.85rem;
+    transition: border-color 0.2s; box-sizing: border-box;
+  }
+  .fieldInput:focus { border-color: rgba(99,102,241,0.5); }
+  
+  .error {
+    padding: 10px 14px; background: rgba(255,71,87,0.1);
+    border: 1px solid rgba(255,71,87,0.2); border-radius: var(--radius-md);
+    font-size: 0.72rem; color: var(--color-red);
+  }
+  .btnSubmit {
+    padding: 13px; margin-top: 4px;
+    background: linear-gradient(135deg,#6366f1,#8b5cf6);
+    border: none; border-radius: var(--radius-md); color: #fff;
+    font-size: 0.8rem; letter-spacing: 0.08em; cursor: pointer;
+    font-family: var(--font-mono); font-weight: 700;
+    box-shadow: var(--shadow-glow-indigo); transition: opacity 0.2s; width: 100%;
+  }
+  .btnSubmit:hover    { opacity: 0.88; }
+  .btnSubmit:disabled { opacity: 0.5; cursor: wait; }
+  .terms { text-align: center; font-size: 0.62rem; color: var(--color-muted2); }
+  
+  /* mobile logo shown on right side */
+  .mobileLogoRow { display: none; margin-bottom: 24px; }
+  
+  @media (max-width: 768px) {
+    .left         { display: none; }
+    .divider      { display: none; }
+    .mobileLogoRow { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  }

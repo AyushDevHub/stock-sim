@@ -1,0 +1,92 @@
+.card {
+    width: 188px;
+    padding: 18px 18px 16px;
+    border-radius: var(--radius-lg);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(16px);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    flex-shrink: 0;
+  }
+  .card:hover {
+    background: rgba(255,255,255,0.055);
+    border-color: rgba(255,255,255,0.12);
+    transform: translateY(-2px);
+  }
+  
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  
+  .logoWrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .logo {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  
+  .info { overflow: hidden; }
+  
+  .symbol {
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-text);
+    white-space: nowrap;
+  }
+  
+  .name {
+    font-size: 0.6rem;
+    color: var(--color-muted);
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90px;
+  }
+  
+  .price {
+    font-family: var(--font-mono);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 4px;
+  }
+  
+  .change {
+    font-size: 0.68rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .up   { color: var(--color-green); }
+  .down { color: var(--color-red); }
+  
+  .dot { opacity: 0.5; }
+  
+  .skeleton {
+    width: 188px;
+    height: 138px;
+    border-radius: var(--radius-lg);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
+    flex-shrink: 0;
+    animation: pulse 1.8s ease-in-out infinite;
+  }

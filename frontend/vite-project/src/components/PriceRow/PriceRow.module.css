@@ -1,0 +1,43 @@
+.row {
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .row:hover { background: var(--color-surface); }
+  
+  .symbolCell { padding: 10px 16px; }
+  .symbolName { font-weight: 600; font-size: 0.8rem; color: var(--color-text); }
+  .companyName { font-size: 0.65rem; color: var(--color-muted); margin-top: 2px; }
+  
+  .numCell {
+    padding: 10px 16px;
+    text-align: right;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+  
+  .changeCell {
+    padding: 10px 16px;
+    text-align: right;
+    font-size: 0.75rem;
+  }
+  .up   { color: var(--color-green); }
+  .down { color: var(--color-red); }
+  
+  .volumeCell {
+    padding: 10px 16px;
+    text-align: right;
+    font-size: 0.7rem;
+    color: var(--color-muted);
+  }
+  
+  .statusCell { padding: 10px 16px; text-align: center; }
+  .badge {
+    font-size: 0.6rem;
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.08em;
+  }
+  .badgeLive   { background: rgba(0,214,143,0.12); color: var(--color-green); }
+  .badgeClosed { background: rgba(74,99,112,0.2);  color: var(--color-muted); }

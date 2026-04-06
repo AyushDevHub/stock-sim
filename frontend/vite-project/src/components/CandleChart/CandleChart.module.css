@@ -1,0 +1,41 @@
+.wrapper {
+    background: var(--color-surface);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .symbolInfo { font-size: 0.8rem; color: var(--color-text); font-weight: 600; }
+  .exchange   { font-size: 0.65rem; color: var(--color-muted); margin-left: 8px; }
+  
+  .intervals { display: flex; gap: 3px; flex-wrap: wrap; }
+  
+  .ivBtn {
+    padding: 3px 8px;
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    border-radius: 3px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    background: transparent;
+    color: var(--color-muted);
+    transition: var(--transition);
+  }
+  .ivBtn:hover  { color: var(--color-text); }
+  .ivActive {
+    background: rgba(255,184,0,0.14);
+    color: var(--color-amber);
+  }
+  
+  .container { height: 420px; }

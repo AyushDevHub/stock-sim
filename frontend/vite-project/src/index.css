@@ -11,8 +11,8 @@
   --color-red:     #ff4757;
   --color-amber:   #ffb800;
   --color-blue:    #00b4d8;
-  --font-mono:    "IBM Plex Mono", monospace;
-  --font-display: "Syne", sans-serif;
+  --font-display: "General Sans", sans-serif;
+  --font-mono: "DM Mono", monospace;
 }
 
 * { box-sizing: border-box; }

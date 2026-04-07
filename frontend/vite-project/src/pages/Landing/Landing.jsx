@@ -69,7 +69,7 @@ export default function Landing() {
   }, []);
 
   // RAF infinite scroll
- 
+
   const posRef = useRef(0); // ← add this at the top of your component
 
   useLayoutEffect(() => {

@@ -1,0 +1,196 @@
+.card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.topRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.leftBlock {
+}
+
+.label {
+  font-size: 0.62rem;
+  color: var(--color-muted);
+  letter-spacing: 0.14em;
+  margin-bottom: 8px;
+}
+
+.portfolioValue {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.profitRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  color: var(--color-muted);
+}
+
+.profitAmt {
+  color: var(--color-green);
+  font-weight: 600;
+}
+
+.profitBadge {
+  background: rgba(0, 214, 143, 0.12);
+  border: 1px solid rgba(0, 214, 143, 0.2);
+  color: var(--color-green);
+  font-size: 0.62rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.statsRow {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.statBlock {
+}
+
+.statLabel {
+  font-size: 0.6rem;
+  color: var(--color-muted);
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+}
+
+.statValue {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.statSub {
+  font-size: 0.62rem;
+  color: var(--color-muted);
+  margin-top: 2px;
+}
+
+.bestStock {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bestLogoWrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+  font-family: var(--font-display);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.bestName {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.bestSymbol {
+  font-size: 0.62rem;
+  color: var(--color-muted);
+  margin-top: 1px;
+}
+
+/* Chart area */
+.chartArea {
+  height: 180px;
+  position: relative;
+}
+
+.chartSvg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Tooltip */
+.tooltip {
+  position: absolute;
+  background: var(--color-surface);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.68rem;
+  color: var(--color-text);
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+}
+
+.tooltipValue {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 2px;
+}
+
+.tooltipLabel {
+  font-size: 0.6rem;
+  color: var(--color-muted);
+}
+
+/* Y-axis labels */
+.yLabels {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.yLabel {
+  font-size: 0.58rem;
+  color: var(--color-muted);
+}
+
+/* X-axis labels */
+.xLabels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 0 2px;
+}
+
+.xLabel {
+  font-size: 0.58rem;
+  color: var(--color-muted);
+}
+
+.xLabelActive {
+  color: var(--color-indigo);
+  font-weight: 600;
+}

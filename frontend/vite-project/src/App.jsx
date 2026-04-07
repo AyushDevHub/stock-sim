@@ -4,7 +4,7 @@ import Navbar from "./components/Navbar/Navbar.jsx";
 import Landing from "./pages/Landing/Landing.jsx";
 import Login from "./pages/Login/Login.jsx";
 import Register from "./pages/Register/Register.jsx";
-// import Dashboard from "./pages/Dashboard.jsx";
+import Dashboard from "./pages/Dashboard/Dashboard.jsx";
 // import Chart from "./pages/Chart.jsx";
 // import Trade from "./pages/Trade.jsx";
 // import Portfolio from "./pages/Portfolio.jsx";
@@ -28,7 +28,7 @@ export default function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        {/* <Route
+        <Route
           path="/dashboard"
           element={
             <Protected>
@@ -38,7 +38,7 @@ export default function App() {
             </Protected>
           }
         />
-        <Route
+        {/* <Route
           path="/chart"
           element={
             <Protected>

@@ -5,9 +5,9 @@ import Landing from "./pages/Landing/Landing.jsx";
 import Login from "./pages/Login/Login.jsx";
 import Register from "./pages/Register/Register.jsx";
 import Dashboard from "./pages/Dashboard/Dashboard.jsx";
-// import Chart from "./pages/Chart.jsx";
-// import Trade from "./pages/Trade.jsx";
-// import Portfolio from "./pages/Portfolio.jsx";
+import Chart from "./pages/Chart.jsx";
+import Trade from "./pages/Trade.jsx";
+import Portfolio from "./pages/Portfolio/Portfolio.jsx";
 
 const Protected = ({ children }) => {
   const { isAuth } = useAuth();
@@ -38,7 +38,7 @@ export default function App() {
             </Protected>
           }
         />
-        {/* <Route
+        <Route
           path="/chart"
           element={
             <Protected>
@@ -67,7 +67,7 @@ export default function App() {
               </AppLayout>
             </Protected>
           }
-        /> */}
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>

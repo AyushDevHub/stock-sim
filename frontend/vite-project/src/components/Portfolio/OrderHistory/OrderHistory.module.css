@@ -1,0 +1,127 @@
+.wrap {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  
+  .scrollX { overflow-x: auto; }
+  
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 560px;
+  }
+  
+  .thead th {
+    padding: 12px 18px;
+    font-size: 0.58rem;
+    color: var(--color-muted);
+    letter-spacing: 0.13em;
+    font-weight: 400;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    white-space: nowrap;
+  }
+  .thLeft  { text-align: left; }
+  .thRight { text-align: right; }
+  
+  .trow {
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    transition: background 0.15s;
+  }
+  .trow:hover { background: rgba(255,255,255,0.02); }
+  .trow:last-child { border-bottom: none; }
+  
+  .tdDate {
+    padding: 13px 18px;
+    font-size: 0.68rem;
+    color: var(--color-muted);
+    white-space: nowrap;
+  }
+  
+  .tdStock { padding: 13px 18px; }
+  .stockRow { display: flex; align-items: center; gap: 10px; }
+  .logo {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-size: 0.62rem;
+    font-weight: 800; color: #fff; flex-shrink: 0;
+  }
+  .stockSymbol { font-family: var(--font-display); font-size: 0.82rem; font-weight: 700; color: var(--color-text); }
+  .stockName   { font-size: 0.58rem; color: var(--color-muted); margin-top: 1px; }
+  
+  .tdType { padding: 13px 18px; text-align: right; }
+  .typePill {
+    display: inline-block;
+    font-size: 0.62rem;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+  .buyPill  { background: rgba(0,214,143,0.1);  color: var(--color-green); border: 1px solid rgba(0,214,143,0.2); }
+  .sellPill { background: rgba(255,71,87,0.1);  color: var(--color-red);   border: 1px solid rgba(255,71,87,0.2); }
+  
+  .tdNum {
+    padding: 13px 18px;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+  }
+  
+  .tdTotal {
+    padding: 13px 18px;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--color-amber);
+    white-space: nowrap;
+  }
+  
+  /* Empty */
+  .empty {
+    padding: 56px 24px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .emptyIcon  { font-size: 2rem; opacity: 0.35; }
+  .emptyTitle { font-family: var(--font-display); font-size: 0.9rem; font-weight: 700; color: var(--color-text); opacity: 0.5; }
+  .emptyText  { font-size: 0.68rem; color: var(--color-muted); max-width: 240px; line-height: 1.6; }
+  
+  /* Pagination */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 18px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .pageInfo { font-size: 0.62rem; color: var(--color-muted); }
+  .pageBtns { display: flex; gap: 4px; }
+  .pageBtn {
+    width: 28px; height: 28px; border-radius: 6px;
+    font-size: 0.68rem;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.07);
+    color: var(--color-muted);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    display: flex; align-items: center; justify-content: center;
+    transition: var(--transition);
+  }
+  .pageBtn:hover    { border-color: rgba(99,102,241,0.3); color: var(--color-indigo); }
+  .pageBtnActive    { background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.4); color: var(--color-indigo); }
+  .pageBtnDisabled  { opacity: 0.3; cursor: not-allowed; }
+  
+  /* Skeleton */
+  .skelRow { padding: 13px 18px; display: flex; gap: 12px; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .skelBar { height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05); animation: pulse 1.6s ease-in-out infinite; flex-shrink: 0; }

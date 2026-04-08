@@ -1,0 +1,169 @@
+.wrap {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  
+  .scrollX { overflow-x: auto; }
+  
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 580px;
+  }
+  
+  .thead th {
+    padding: 12px 18px;
+    font-size: 0.58rem;
+    color: var(--color-muted);
+    letter-spacing: 0.13em;
+    font-weight: 400;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    white-space: nowrap;
+  }
+  .thLeft  { text-align: left; }
+  .thRight { text-align: right; }
+  
+  .trow {
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  .trow:hover { background: rgba(255,255,255,0.025); }
+  .trow:last-child { border-bottom: none; }
+  
+  /* Stock cell */
+  .tdStock { padding: 14px 18px; }
+  .stockRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .stockSymbol {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+  .stockName {
+    font-size: 0.6rem;
+    color: var(--color-muted);
+    margin-top: 2px;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .tdNum {
+    padding: 14px 18px;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+  }
+  
+  .tdChange {
+    padding: 14px 18px;
+    text-align: right;
+  }
+  .changePill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .upPill   { background: rgba(0,214,143,0.1);  color: var(--color-green); }
+  .downPill { background: rgba(255,71,87,0.1);  color: var(--color-red); }
+  .flatPill { background: rgba(74,99,112,0.15); color: var(--color-muted); }
+  
+  .tdValue {
+    padding: 14px 18px;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-amber);
+    white-space: nowrap;
+  }
+  
+  .tdAction { padding: 14px 18px; text-align: right; }
+  .actionBtns { display: flex; gap: 6px; justify-content: flex-end; }
+  .btnChart {
+    padding: 4px 12px;
+    font-size: 0.62rem;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--color-muted);
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    transition: var(--transition);
+  }
+  .btnChart:hover { border-color: var(--color-indigo); color: var(--color-indigo); }
+  
+  .btnTrade {
+    padding: 4px 12px;
+    font-size: 0.62rem;
+    background: rgba(0,214,143,0.1);
+    border: 1px solid rgba(0,214,143,0.2);
+    color: var(--color-green);
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    transition: var(--transition);
+  }
+  .btnTrade:hover { background: rgba(0,214,143,0.18); }
+  
+  /* Empty */
+  .empty {
+    padding: 64px 24px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .emptyIcon  { font-size: 2.2rem; opacity: 0.35; }
+  .emptyTitle { font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; color: var(--color-text); opacity: 0.5; }
+  .emptyText  { font-size: 0.68rem; color: var(--color-muted); max-width: 260px; line-height: 1.7; }
+  .emptyBtn {
+    margin-top: 4px;
+    padding: 10px 24px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border: none;
+    border-radius: var(--radius-md);
+    color: #fff;
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(99,102,241,0.25);
+    transition: opacity 0.2s;
+  }
+  .emptyBtn:hover { opacity: 0.88; }
+  
+  /* Skeleton */
+  .skelRow { padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.03); display: flex; align-items: center; gap: 12px; }
+  .skelBar { height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05); animation: pulse 1.6s ease-in-out infinite; flex-shrink: 0; }
+  .skelCircle { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.05); animation: pulse 1.6s ease-in-out infinite; flex-shrink: 0; }

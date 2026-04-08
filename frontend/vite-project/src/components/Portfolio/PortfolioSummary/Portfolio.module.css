@@ -1,0 +1,75 @@
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  
+  .card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius-lg);
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.25s;
+  }
+  .card:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.1);
+    transform: translateY(-2px);
+  }
+  
+  /* subtle top border accent */
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    opacity: 0.6;
+  }
+  .accentGreen::before  { background: var(--color-green); }
+  .accentAmber::before  { background: var(--color-amber); }
+  .accentIndigo::before { background: var(--color-indigo); }
+  .accentRed::before    { background: var(--color-red); }
+  
+  .eyebrow {
+    font-size: 0.58rem;
+    color: var(--color-muted);
+    letter-spacing: 0.14em;
+    margin-bottom: 10px;
+  }
+  
+  .value {
+    font-family: var(--font-display);
+    font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  
+  .green  { color: var(--color-green); }
+  .amber  { color: var(--color-amber); }
+  .indigo { color: var(--color-indigo); }
+  .red    { color: var(--color-red); }
+  .text   { color: var(--color-text); }
+  
+  .sub {
+    font-size: 0.62rem;
+    color: var(--color-muted);
+    line-height: 1.5;
+  }
+  
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-top: 6px;
+  }
+  .pillGreen { background: rgba(0,214,143,0.12); color: var(--color-green); border: 1px solid rgba(0,214,143,0.2); }
+  .pillRed   { background: rgba(255,71,87,0.12);  color: var(--color-red);   border: 1px solid rgba(255,71,87,0.2); }

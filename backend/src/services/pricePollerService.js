@@ -1,5 +1,6 @@
 import YahooFinance from "yahoo-finance2";
 import Stock from "../models/Stock.js";
+import { emitPrices } from "./socketService.js";
 
 const yahooFinance = new YahooFinance({ suppressNotices: ["yahooSurvey"] });
 
@@ -46,7 +47,6 @@ const refreshPrices = async () => {
         percentChange: +(q.regularMarketChangePercent || 0).toFixed(2),
         volume: q.regularMarketVolume,
         marketState: q.marketState,
-        // direction flag for frontend flash animation
         direction: prev
           ? price > prev.price
             ? "up"
@@ -65,6 +65,11 @@ const refreshPrices = async () => {
         stocks.length
       } prices at ${new Date().toLocaleTimeString()}`
     );
+
+    // ── Broadcast to all connected Socket.io clients ──
+    if (updated > 0) {
+      emitPrices(getAllPrices());
+    }
   } catch (err) {
     console.error("[PricePoller] Error refreshing prices:", err.message);
   }
@@ -75,10 +80,11 @@ export const startPricePoller = async (intervalMs = 1000) => {
   if (isPolling) return;
   isPolling = true;
 
-  console.log(`[PricePoller] Starting — polling every ${intervalMs / 1000}s`);
+  console.log(
+    `[PricePoller] Starting — pushing via Socket.io every ${intervalMs / 1000}s`
+  );
 
-  // first fetch immediately so cache isn't empty on first request
-  await refreshPrices();
+  await refreshPrices(); // warm the cache immediately
 
   pollInterval = setInterval(refreshPrices, intervalMs);
 };
@@ -89,7 +95,7 @@ export const stopPricePoller = () => {
   console.log("[PricePoller] Stopped");
 };
 
-// ── cache accessors ────────────────────────────────────────────────────────
+// ── cache accessors (still used by REST /prices routes) ───────────────────
 export const getAllPrices = () => Array.from(priceCache.values());
 export const getPrice = (symbol) =>
   priceCache.get(symbol.toUpperCase()) || null;

@@ -1,0 +1,91 @@
+.grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 16px 14px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.18s, border-color 0.18s;
+  }
+  
+  .card::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  }
+  
+  .card:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-border2);
+  }
+  
+  /* Accent bottom borders */
+  .accent_green::after  { background: linear-gradient(90deg, var(--color-green), transparent); }
+  .accent_red::after    { background: linear-gradient(90deg, var(--color-red), transparent); }
+  .accent_indigo::after { background: linear-gradient(90deg, var(--color-indigo), transparent); }
+  .accent_amber::after  { background: linear-gradient(90deg, var(--color-amber), transparent); }
+  .accent_violet::after { background: linear-gradient(90deg, var(--color-violet), transparent); }
+  .accent_muted::after  { background: linear-gradient(90deg, var(--color-muted2), transparent); }
+  
+  .cardTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  
+  .eyebrow {
+    font-size: 0.56rem;
+    letter-spacing: 0.12em;
+    color: var(--color-muted);
+    font-weight: 600;
+  }
+  
+  .icon {
+    font-size: 0.85rem;
+    opacity: 0.6;
+  }
+  
+  .value {
+    font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+    font-weight: 800;
+    color: var(--color-text);
+    margin-bottom: 4px;
+    font-family: var(--font-display);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .sub {
+    font-size: 0.58rem;
+    color: var(--color-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* Value colors */
+  .green  { color: var(--color-green); }
+  .red    { color: var(--color-red); }
+  .amber  { color: var(--color-amber); }
+  .indigo { color: var(--color-indigo); }
+  
+  @media (max-width: 1200px) {
+    .grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  
+  @media (max-width: 640px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+  }

@@ -1,5 +1,5 @@
 import express from "express";
-import protect from "../middlewares/authMiddleware.js";
+import { protect } from "../middlewares/authMiddleware.js";
 import { getChartData, getLiveQuote } from "../services/chartService.js";
 
 const router = express.Router();

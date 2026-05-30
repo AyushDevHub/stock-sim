@@ -4,8 +4,9 @@ import Stock from "../models/Stock.js";
 
 dotenv.config();
 
-const stocks = [
-  // Nifty 50 core
+// Full NSE stock list — Nifty 50 + Nifty Next 50 + popular extras
+const STOCKS = [
+  // ── Nifty 50 ──
   { symbol: "RELIANCE", name: "Reliance Industries", exchange: "NSE" },
   { symbol: "TCS", name: "Tata Consultancy Services", exchange: "NSE" },
   { symbol: "HDFCBANK", name: "HDFC Bank", exchange: "NSE" },
@@ -31,7 +32,6 @@ const stocks = [
   { symbol: "ONGC", name: "Oil & Natural Gas Corp", exchange: "NSE" },
   { symbol: "NTPC", name: "NTPC", exchange: "NSE" },
   { symbol: "POWERGRID", name: "Power Grid Corp", exchange: "NSE" },
-  { symbol: "M&M", name: "Mahindra & Mahindra", exchange: "NSE" },
   { symbol: "TATAMOTORS", name: "Tata Motors", exchange: "NSE" },
   { symbol: "TATASTEEL", name: "Tata Steel", exchange: "NSE" },
   { symbol: "ADANIENT", name: "Adani Enterprises", exchange: "NSE" },
@@ -54,33 +54,88 @@ const stocks = [
   { symbol: "BRITANNIA", name: "Britannia Industries", exchange: "NSE" },
   { symbol: "SBILIFE", name: "SBI Life Insurance", exchange: "NSE" },
   { symbol: "HDFCLIFE", name: "HDFC Life Insurance", exchange: "NSE" },
-  // Bonus popular
+  { symbol: "MM", name: "Mahindra & Mahindra", exchange: "NSE" },
+  { symbol: "BAJAJ-AUTO", name: "Bajaj Auto", exchange: "NSE" },
+  { symbol: "SHREECEM", name: "Shree Cement", exchange: "NSE" },
+  // ── Nifty Next 50 ──
+  { symbol: "AMBUJACEM", name: "Ambuja Cements", exchange: "NSE" },
+  { symbol: "BANKBARODA", name: "Bank of Baroda", exchange: "NSE" },
+  { symbol: "BERGEPAINT", name: "Berger Paints", exchange: "NSE" },
+  { symbol: "BIOCON", name: "Biocon", exchange: "NSE" },
+  { symbol: "BOSCHLTD", name: "Bosch", exchange: "NSE" },
+  { symbol: "CHOLAFIN", name: "Cholamandalam Investment", exchange: "NSE" },
+  { symbol: "COLPAL", name: "Colgate-Palmolive India", exchange: "NSE" },
+  { symbol: "CUMMINSIND", name: "Cummins India", exchange: "NSE" },
+  { symbol: "DABUR", name: "Dabur India", exchange: "NSE" },
+  { symbol: "GODREJCP", name: "Godrej Consumer Products", exchange: "NSE" },
+  { symbol: "GODREJPROP", name: "Godrej Properties", exchange: "NSE" },
+  { symbol: "GUJGASLTD", name: "Gujarat Gas", exchange: "NSE" },
+  { symbol: "HAL", name: "Hindustan Aeronautics", exchange: "NSE" },
+  { symbol: "HAVELLS", name: "Havells India", exchange: "NSE" },
+  { symbol: "ICICIPRULI", name: "ICICI Prudential Life", exchange: "NSE" },
+  { symbol: "INDIANB", name: "Indian Bank", exchange: "NSE" },
+  { symbol: "INDUSTOWER", name: "Indus Towers", exchange: "NSE" },
+  { symbol: "LUPIN", name: "Lupin", exchange: "NSE" },
+  { symbol: "MOTHERSON", name: "Samvardhana Motherson", exchange: "NSE" },
+  { symbol: "MUTHOOTFIN", name: "Muthoot Finance", exchange: "NSE" },
+  { symbol: "PAGEIND", name: "Page Industries", exchange: "NSE" },
+  { symbol: "PEL", name: "Piramal Enterprises", exchange: "NSE" },
+  { symbol: "PETRONET", name: "Petronet LNG", exchange: "NSE" },
+  { symbol: "PIDILITIND", name: "Pidilite Industries", exchange: "NSE" },
+  { symbol: "PNBHOUSING", name: "PNB Housing Finance", exchange: "NSE" },
+  { symbol: "RECLTD", name: "REC Limited", exchange: "NSE" },
+  { symbol: "SIEMENS", name: "Siemens India", exchange: "NSE" },
+  { symbol: "TORNTPHARM", name: "Torrent Pharmaceuticals", exchange: "NSE" },
+  { symbol: "TORNTPOWER", name: "Torrent Power", exchange: "NSE" },
+  { symbol: "TRENT", name: "Trent", exchange: "NSE" },
+  { symbol: "UBL", name: "United Breweries", exchange: "NSE" },
+  { symbol: "VEDL", name: "Vedanta", exchange: "NSE" },
+  { symbol: "VOLTAS", name: "Voltas", exchange: "NSE" },
+  // ── Popular extras ──
   { symbol: "IRCTC", name: "Indian Railway Catering", exchange: "NSE" },
   { symbol: "ZOMATO", name: "Zomato", exchange: "NSE" },
-  { symbol: "PAYTM", name: "One97 Communications (Paytm)", exchange: "NSE" },
   { symbol: "NYKAA", name: "FSN E-Commerce (Nykaa)", exchange: "NSE" },
   { symbol: "MRF", name: "MRF", exchange: "NSE" },
-  { symbol: "PIDILITIND", name: "Pidilite Industries", exchange: "NSE" },
-  { symbol: "HAVELLS", name: "Havells India", exchange: "NSE" },
   { symbol: "DMART", name: "Avenue Supermarts (DMart)", exchange: "NSE" },
+  { symbol: "POLYCAB", name: "Polycab India", exchange: "NSE" },
+  { symbol: "LTIM", name: "LTIMindtree", exchange: "NSE" },
+  { symbol: "PERSISTENT", name: "Persistent Systems", exchange: "NSE" },
+  { symbol: "MPHASIS", name: "Mphasis", exchange: "NSE" },
+  { symbol: "COFORGE", name: "Coforge", exchange: "NSE" },
+  { symbol: "ZEEL", name: "Zee Entertainment", exchange: "NSE" },
+  { symbol: "PVR", name: "PVR INOX", exchange: "NSE" },
+  { symbol: "TATAPOWER", name: "Tata Power", exchange: "NSE" },
+  { symbol: "ADANIGREEN", name: "Adani Green Energy", exchange: "NSE" },
+  { symbol: "ADANITRANS", name: "Adani Transmission", exchange: "NSE" },
+  { symbol: "BANDHANBNK", name: "Bandhan Bank", exchange: "NSE" },
+  { symbol: "FEDERALBNK", name: "Federal Bank", exchange: "NSE" },
+  { symbol: "IDFCFIRSTB", name: "IDFC First Bank", exchange: "NSE" },
+  { symbol: "RBLBANK", name: "RBL Bank", exchange: "NSE" },
 ];
 
 async function seed() {
   try {
     await mongoose.connect(process.env.MONGO_URI);
 
-    const count = await Stock.countDocuments();
-
-    if (count === 0) {
-      await Stock.insertMany(stocks);
-      console.log(`✅ Seeded ${stocks.length} stocks`);
-    } else {
-      console.log("⚡ Stocks already exist, skipping seed");
+    // Use upsert so this is safe to run multiple times
+    // New stocks get inserted, existing ones are untouched
+    let added = 0;
+    for (const stock of STOCKS) {
+      const result = await Stock.updateOne(
+        { symbol: stock.symbol },
+        { $setOnInsert: stock },
+        { upsert: true }
+      );
+      if (result.upsertedCount > 0) added++;
     }
 
-    process.exit();
+    const total = await Stock.countDocuments();
+    console.log(
+      `✅ Seed complete — ${added} new stocks added, ${total} total in DB`
+    );
+    process.exit(0);
   } catch (err) {
-    console.error(err);
+    console.error("Seed failed:", err);
     process.exit(1);
   }
 }

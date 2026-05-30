@@ -1,16 +1,25 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "../services/api.js";
 
+// Normalize watchlist response — backend sometimes returns:
+//   GET  → [{ symbol, price, change }, ...]   (objects)
+//   POST/DELETE → ["TCS", "INFY", ...]        (strings)
+const toSymbolArray = (arr = []) =>
+  arr
+    .map((item) => (typeof item === "string" ? item : item.symbol))
+    .filter(Boolean);
+
 export const useWatchlist = () => {
   const [symbols, setSymbols] = useState([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetch = useCallback(async () => {
+  const fetchWatchlist = useCallback(async () => {
+    setLoading(true);
     try {
       const { data } = await api.get("/watchlist");
-      setSymbols(data.watchlist?.map((item) => item.symbol) || []);
+      setSymbols(toSymbolArray(data.watchlist));
     } catch (e) {
       setError(e.response?.data?.message || "Failed to load watchlist");
     } finally {
@@ -19,15 +28,17 @@ export const useWatchlist = () => {
   }, []);
 
   useEffect(() => {
-    fetch();
-  }, [fetch]);
+    fetchWatchlist();
+  }, [fetchWatchlist]);
 
   const add = useCallback(async (symbol) => {
     setAdding(true);
     setError(null);
     try {
-      const { data } = await api.post("/watchlist", { symbol });
-      setSymbols(data.watchlist?.map((item) => item.symbol) || []);
+      const { data } = await api.post("/watchlist", {
+        symbol: symbol.toUpperCase(),
+      });
+      setSymbols(toSymbolArray(data.watchlist));
       return { ok: true };
     } catch (e) {
       const msg = e.response?.data?.message || "Failed to add";
@@ -40,17 +51,16 @@ export const useWatchlist = () => {
 
   const remove = useCallback(
     async (symbol) => {
-      // optimistic update
+      // Optimistic update
       setSymbols((prev) => prev.filter((s) => s !== symbol));
       try {
         const { data } = await api.delete(`/watchlist/${symbol}`);
-        setSymbols(data.watchlist?.map((item) => item.symbol) || []);
-      } catch (e) {
-        // revert on fail
-        fetch();
+        setSymbols(toSymbolArray(data.watchlist));
+      } catch {
+        fetchWatchlist(); // revert on failure
       }
     },
-    [fetch]
+    [fetchWatchlist]
   );
 
   const isInWatchlist = useCallback(

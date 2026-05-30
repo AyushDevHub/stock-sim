@@ -8,12 +8,13 @@ import Dashboard from "./pages/Dashboard/Dashboard.jsx";
 import Chart from "./pages/Chart.jsx";
 import Trade from "./pages/Trade.jsx";
 import Portfolio from "./pages/Portfolio/Portfolio.jsx";
+import Scenarios from "./pages/Scenarios/Scenarios.jsx";
+import ScenarioArena from "./pages/Scenarios/ScenarioArena.jsx";
 
 const Protected = ({ children }) => {
   const { isAuth } = useAuth();
   return isAuth ? children : <Navigate to="/login" replace />;
 };
-
 const AppLayout = ({ children }) => (
   <>
     <Navbar />
@@ -65,6 +66,24 @@ export default function App() {
               <AppLayout>
                 <Portfolio />
               </AppLayout>
+            </Protected>
+          }
+        />
+        <Route
+          path="/scenarios"
+          element={
+            <Protected>
+              <AppLayout>
+                <Scenarios />
+              </AppLayout>
+            </Protected>
+          }
+        />
+        <Route
+          path="/scenarios/:id"
+          element={
+            <Protected>
+              <ScenarioArena />
             </Protected>
           }
         />

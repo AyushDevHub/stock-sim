@@ -1,25 +1,35 @@
+import http from "http";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import app from "./app.js";
 import { startPricePoller } from "./services/pricePollerService.js";
+import { initSocket } from "./services/socketService.js";
 
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
-const POLL_INTERVAL = parseInt(process.env.POLL_INTERVAL_MS) || 1000; // default 1s
+const POLL_INTERVAL = parseInt(process.env.POLL_INTERVAL_MS) || 1000;
 
-if (!MONGO_URI) { //checking in env
+if (!MONGO_URI) {
   console.error("MONGO_URI is not defined in .env");
   process.exit(1);
 }
 
-mongoose  // schema connecting to database
+// Wrap Express in a plain http.Server so Socket.io can share the same port
+const httpServer = http.createServer(app);
+
+// Attach Socket.io to the http server
+initSocket(httpServer);
+
+mongoose
   .connect(MONGO_URI)
   .then(async () => {
     console.log("MongoDB connected");
-    await startPricePoller(POLL_INTERVAL); //poll starts
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    await startPricePoller(POLL_INTERVAL);
+    httpServer.listen(PORT, () =>
+      console.log(`Server + Socket.io running on port ${PORT}`)
+    );
   })
   .catch((err) => {
     console.error("DB connection failed:", err.message);

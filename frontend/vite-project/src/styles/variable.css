@@ -1,28 +1,40 @@
 :root {
-  --color-bg: #060810;
-  --color-surface: #0d1117;
-  --color-surface2: #111827;
-  --color-border: rgba(255, 255, 255, 0.06);
-  --color-border2: rgba(255, 255, 255, 0.1);
-  --color-text: #f0f6fa;
-  --color-muted: #4a6370;
-  --color-muted2: #2a3a44;
-  --color-green: #00d68f;
-  --color-red: #ff4757;
-  --color-amber: #ffb800;
-  --color-indigo: #6366f1;
-  --color-violet: #8b5cf6;
-  --color-cyan: #00b4d8;
+  /* ── Colours ── */
+  --color-bg:       #0b0f18;
+  --color-surface:  #131924;
+  --color-surface2: #1a2332;
+  --color-border:   rgba(255, 255, 255, 0.07);
+  --color-border2:  rgba(255, 255, 255, 0.13);
+  --color-text:     #e8edf5;
+  --color-text2:    #b0bec8;
+  --color-muted:    #5a7080;
+  --color-muted2:   #2a3a44;
+  --color-green:    #22c55e;
+  --color-red:      #ef4444;
+  --color-amber:    #f59e0b;
+  --color-indigo:   #6366f1;
+  --color-violet:   #8b5cf6;
+  --color-cyan:     #06b6d4;
 
-  --font-display: "General Sans", sans-serif;
-  --font-mono: "DM Mono", monospace;
+  /* ── Fonts ──
+     --font-body  : all readable text — headings, labels, paragraphs
+     --font-num   : prices, percentages, numbers (monospace for alignment)
+  */
+  --font-body:    "Inter", system-ui, -apple-system, sans-serif;
+  --font-display: "Inter", system-ui, sans-serif;
+  --font-mono:    "DM Mono", ui-monospace, monospace;   /* legacy alias */
+  --font-num:     "DM Mono", ui-monospace, monospace;   /* use for prices */
 
+  /* ── Radii ── */
   --radius-sm: 6px;
   --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
 
-  --shadow-glow-indigo: 0 0 24px rgba(99, 102, 241, 0.3);
-  --shadow-glow-green: 0 0 24px rgba(0, 214, 143, 0.25);
-  --transition: all 0.2s ease;
+  /* ── Shadows ── */
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-glow-indigo: 0 0 20px rgba(99,102,241,0.2);
+
+  /* ── Transitions ── */
+  --transition: all 0.18s ease;
 }

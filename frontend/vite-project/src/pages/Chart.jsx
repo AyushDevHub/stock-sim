@@ -1,185 +1,217 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import CandleChart from "../components/CandleChart/Candlechart.jsx";
 import TradePanel from "../components/TradePanel/TradePanel.jsx";
-import { usePrices } from "../hooks/usePrices.js";
+import { usePrices } from "../hooks/UsePrices.js";
+import api from "../services/api.js";
+import styles from "./Chart.module.css";
+
+const INTERVALS = [
+  { key: "1m", label: "1m" },
+  { key: "5m", label: "5m" },
+  { key: "15m", label: "15m" },
+  { key: "1h", label: "1H" },
+  { key: "1d", label: "1D" },
+  { key: "1wk", label: "1W" },
+  { key: "1mo", label: "1M" },
+];
 
 export default function Chart() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [interval, setInterval] = useState("1d");
+  const [showTrade, setShowTrade] = useState(false);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [searching, setSearching] = useState(false);
   const { prices } = usePrices();
+  const navigate = useNavigate();
 
   const symbol = searchParams.get("symbol") || (prices[0]?.symbol ?? "TCS");
   const liveStock = prices.find((p) => p.symbol === symbol);
+  const up = (liveStock?.change ?? 0) >= 0;
 
-  const selectSymbol = (sym) => setSearchParams({ symbol: sym });
+  const selectSymbol = (sym) => {
+    setSearchParams({ symbol: sym });
+    setQuery("");
+    setResults([]);
+  };
+
+  // Search debounce
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
+    const id = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const { data } = await api.get(
+          `/stocks/search?q=${encodeURIComponent(query)}`
+        );
+        setResults(data.results?.slice(0, 6) || []);
+      } catch {
+        setResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+    return () => clearTimeout(id);
+  }, [query]);
 
   return (
-    <div style={{ padding: 24, maxWidth: 1400, margin: "0 auto" }}>
-      <div
-        style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 16 }}
-      >
-        {/* Left — chart + stats */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {/* Price header */}
+    <div className={styles.page}>
+      {/* ── Top header bar ── */}
+      <div className={styles.topBar}>
+        {/* Left: symbol + price */}
+        <div className={styles.stockHeader}>
+          <div className={styles.symbolBlock}>
+            <div className={styles.symbolName}>{liveStock?.name || symbol}</div>
+            <div className={styles.symbolSub}>{symbol} · NSE</div>
+          </div>
           {liveStock && (
-            <div
-              style={{
-                background: "#0d1417",
-                border: "1px solid #1a2428",
-                borderRadius: "4px",
-                padding: "14px 20px",
-                display: "flex",
-                alignItems: "center",
-                gap: 32,
-                flexWrap: "wrap",
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    fontFamily: "Syne, sans-serif",
-                    fontSize: "1rem",
-                    fontWeight: 700,
-                    color: "#c8d8de",
-                  }}
-                >
-                  {liveStock.name}
-                </div>
-                <div
-                  style={{
-                    fontSize: "0.65rem",
-                    color: "#4a6370",
-                    marginTop: 2,
-                  }}
-                >
-                  {symbol} · NSE
-                </div>
-              </div>
-              <div>
-                <div
-                  style={{
-                    fontSize: "1.4rem",
-                    fontWeight: 600,
-                    color: "#c8d8de",
-                    fontFamily: "IBM Plex Mono",
-                  }}
-                >
+            <>
+              <div className={styles.priceBlock}>
+                <div className={styles.price}>
                   ₹
                   {liveStock.price?.toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
                   })}
                 </div>
                 <div
-                  style={{
-                    fontSize: "0.75rem",
-                    color: liveStock.change >= 0 ? "#00d68f" : "#ff4757",
-                  }}
+                  className={`${styles.change} ${up ? styles.up : styles.down}`}
                 >
-                  {liveStock.change >= 0 ? "▲" : "▼"}{" "}
-                  {Math.abs(liveStock.change).toFixed(2)} (
-                  {liveStock.percentChange?.toFixed(2)}%)
+                  {up ? "▲" : "▼"} {Math.abs(liveStock.change ?? 0).toFixed(2)}{" "}
+                  ({Math.abs(liveStock.percentChange ?? 0).toFixed(2)}%)
                 </div>
               </div>
-              {[
-                { label: "OPEN", value: liveStock.open },
-                { label: "HIGH", value: liveStock.high },
-                { label: "LOW", value: liveStock.low },
-                { label: "PREV", value: liveStock.previousClose },
-              ].map(({ label, value }) => (
-                <div key={label}>
-                  <div
-                    style={{
-                      fontSize: "0.6rem",
-                      color: "#4a6370",
-                      letterSpacing: "0.1em",
-                    }}
-                  >
-                    {label}
+              <div className={styles.ohlcBar}>
+                {[
+                  ["O", liveStock.open],
+                  ["H", liveStock.high],
+                  ["L", liveStock.low],
+                  ["C", liveStock.previousClose],
+                ].map(([l, v]) => (
+                  <div key={l} className={styles.ohlcItem}>
+                    <span className={styles.ohlcL}>{l}</span>
+                    <span className={styles.ohlcV}>
+                      {v
+                        ? `₹${v.toLocaleString("en-IN", {
+                            maximumFractionDigits: 0,
+                          })}`
+                        : "—"}
+                    </span>
                   </div>
-                  <div
-                    style={{
-                      fontSize: "0.8rem",
-                      color: "#c8d8de",
-                      marginTop: 2,
-                    }}
-                  >
-                    ₹
-                    {value?.toLocaleString("en-IN", {
-                      minimumFractionDigits: 2,
-                    }) ?? "—"}
-                  </div>
-                </div>
-              ))}
-              <div
-                style={{
-                  marginLeft: "auto",
-                  fontSize: "0.65rem",
-                  color: "#4a6370",
-                }}
-              >
-                <span style={{ color: "#00d68f" }}>●</span> LIVE · 10s
+                ))}
               </div>
-            </div>
+            </>
           )}
+        </div>
 
-          {/* Chart */}
+        {/* Right: search + trade button */}
+        <div className={styles.topActions}>
+          <div className={styles.searchWrap}>
+            <div className={styles.searchBox}>
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#5a7080"
+                strokeWidth="2"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+              <input
+                className={styles.searchInput}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Switch symbol…"
+              />
+            </div>
+            {(results.length > 0 || searching) && (
+              <div className={styles.searchDrop}>
+                {searching && (
+                  <div className={styles.dropLoading}>Searching…</div>
+                )}
+                {results.map((r) => (
+                  <div
+                    key={r.symbol}
+                    className={styles.dropItem}
+                    onClick={() => selectSymbol(r.symbol)}
+                  >
+                    <span className={styles.dropSym}>{r.symbol}</span>
+                    <span className={styles.dropName}>
+                      {r.shortname || r.longname}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <button
+            className={`${styles.tradeBtn} ${
+              up ? styles.tradeBtnUp : styles.tradeBtnDown
+            }`}
+            onClick={() => setShowTrade((t) => !t)}
+          >
+            {showTrade ? "Hide Order" : "Trade"}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Interval selector ── */}
+      <div className={styles.intervalBar}>
+        {INTERVALS.map((iv) => (
+          <button
+            key={iv.key}
+            className={`${styles.ivBtn} ${
+              interval === iv.key ? styles.ivActive : ""
+            }`}
+            onClick={() => setInterval(iv.key)}
+          >
+            {iv.label}
+          </button>
+        ))}
+        <div className={styles.liveDot}>
+          <span className={styles.dot} />
+          LIVE
+        </div>
+      </div>
+
+      {/* ── Main: chart + optional trade panel ── */}
+      <div
+        className={`${styles.main} ${showTrade ? styles.mainWithPanel : ""}`}
+      >
+        <div className={styles.chartArea}>
           <CandleChart
             symbol={symbol}
             interval={interval}
             onIntervalChange={setInterval}
           />
-
-          {/* Symbol selector */}
-          <div
-            style={{
-              background: "#0d1417",
-              border: "1px solid #1a2428",
-              borderRadius: "4px",
-              padding: 16,
-            }}
-          >
-            <div
-              style={{
-                fontSize: "0.6rem",
-                color: "#4a6370",
-                letterSpacing: "0.12em",
-                marginBottom: 12,
-              }}
-            >
-              SWITCH SYMBOL
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {prices.map((p) => (
-                <button
-                  key={p.symbol}
-                  onClick={() => selectSymbol(p.symbol)}
-                  style={{
-                    padding: "4px 10px",
-                    fontSize: "0.7rem",
-                    borderRadius: "2px",
-                    border: "1px solid",
-                    cursor: "pointer",
-                    fontFamily: "IBM Plex Mono, monospace",
-                    background:
-                      p.symbol === symbol
-                        ? "rgba(255,184,0,0.12)"
-                        : "transparent",
-                    borderColor: p.symbol === symbol ? "#ffb800" : "#1a2428",
-                    color: p.symbol === symbol ? "#ffb800" : "#4a6370",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  {p.symbol}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
+        {showTrade && (
+          <div className={styles.tradePanel}>
+            <TradePanel symbol={symbol} price={liveStock?.price} />
+          </div>
+        )}
+      </div>
 
-        {/* Right — trade panel */}
-        <div>
-          <TradePanel symbol={symbol} price={liveStock?.price} />
+      {/* ── Symbol quick-switch chips ── */}
+      <div className={styles.chipsWrap}>
+        <div className={styles.chips}>
+          {prices.slice(0, 30).map((p) => (
+            <button
+              key={p.symbol}
+              className={`${styles.chip} ${
+                p.symbol === symbol ? styles.chipActive : ""
+              }`}
+              onClick={() => selectSymbol(p.symbol)}
+            >
+              {p.symbol}
+            </button>
+          ))}
         </div>
       </div>
     </div>

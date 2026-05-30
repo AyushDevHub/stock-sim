@@ -1,79 +1,53 @@
 @import "tailwindcss";
 @import "./variable.css";
 
-*,
-*::before,
-*::after {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
-  font-family: var(--font-mono);
+  font-family: var(--font-body);   /* ← Inter, not DM Mono */
   -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+  font-size: 14px;
 }
 
+/* Prices and numbers stay in mono for alignment */
+.num, .price, .pct { font-family: var(--font-num); }
+
+/* Flash animations */
 @keyframes flashGreen {
-  0% {
-    background-color: rgba(0, 214, 143, 0.2);
-  }
-  100% {
-    background-color: transparent;
-  }
+  0%   { background-color: rgba(34,197,94,0.18); }
+  100% { background-color: transparent; }
 }
 @keyframes flashRed {
-  0% {
-    background-color: rgba(255, 71, 87, 0.2);
-  }
-  100% {
-    background-color: transparent;
-  }
+  0%   { background-color: rgba(239,68,68,0.18); }
+  100% { background-color: transparent; }
 }
 @keyframes pulse {
-  0%,
-  100% {
-    opacity: 0.3;
-  }
-  50% {
-    opacity: 0.65;
-  }
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.8; }
 }
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.flash-up {
-  animation: flashGreen 0.8s ease-out;
-}
-.flash-down {
-  animation: flashRed 0.8s ease-out;
-}
-.fade-in {
-  animation: fadeIn 0.3s ease-out;
-}
+.flash-up   { animation: flashGreen 0.7s ease-out; }
+.flash-down { animation: flashRed   0.7s ease-out; }
+.fade-in    { animation: fadeIn     0.25s ease-out; }
 
-::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-::-webkit-scrollbar-track {
-  background: var(--color-bg);
-}
-::-webkit-scrollbar-thumb {
-  background: #1a2428;
-  border-radius: 2px;
-}
+/* Scrollbar */
+::-webkit-scrollbar       { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: #1e2d3a; border-radius: 2px; }

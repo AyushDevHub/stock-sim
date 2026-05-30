@@ -1,7 +1,7 @@
 import express from "express";
 import Watchlist from "../models/Watchlist.js";
 import { getAllPrices, getPrice } from "../services/pricePollerService.js";
-import protect from "../middlewares/authMiddleware.js";
+import { protect } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 

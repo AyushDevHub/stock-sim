@@ -19,10 +19,8 @@ const COLORS = [
   "#eab308",
   "#22c55e",
 ];
+const PAGE_SIZE = 15;
 
-const PAGE_SIZE = 12;
-
-// Individual row with flash animation
 function Row({ stock, idx }) {
   const ref = useRef(null);
   const prevDir = useRef("flat");
@@ -41,75 +39,132 @@ function Row({ stock, idx }) {
   }, [stock.price, stock.direction]);
 
   return (
-    <tr
-      ref={ref}
-      className={styles.trow}
-      onClick={() => navigate(`/chart?symbol=${stock.symbol}`)}
-    >
-      <td className={styles.tdStock}>
-        <div className={styles.stockMeta}>
-          <div
-            className={styles.stockLogo}
-            style={{
-              background: `linear-gradient(135deg,${
-                COLORS[idx % COLORS.length]
-              },${COLORS[idx % COLORS.length]}88)`,
+    <>
+      {/* ── Desktop row (table) ── */}
+      <tr
+        ref={ref}
+        className={styles.trow}
+        onClick={() => navigate(`/chart?symbol=${stock.symbol}`)}
+      >
+        <td className={styles.tdStock}>
+          <div className={styles.stockMeta}>
+            <div
+              className={styles.stockLogo}
+              style={{
+                background: `linear-gradient(135deg,${
+                  COLORS[idx % COLORS.length]
+                },${COLORS[idx % COLORS.length]}88)`,
+              }}
+            >
+              {stock.symbol.slice(0, 2)}
+            </div>
+            <div>
+              <div className={styles.stockSymbol}>{stock.symbol}</div>
+              <div className={styles.stockName}>
+                {stock.name?.split(" ").slice(0, 3).join(" ")}
+              </div>
+            </div>
+          </div>
+        </td>
+        <td className={styles.tdNum}>
+          {stock.volume ? (stock.volume / 1_00_000).toFixed(2) + "L" : "—"}
+        </td>
+        <td className={styles.tdNum}>
+          {stock.open
+            ? `₹${stock.open.toLocaleString("en-IN", {
+                maximumFractionDigits: 0,
+              })}`
+            : "—"}
+        </td>
+        <td className={styles.tdChange}>
+          <span
+            className={`${styles.changePill} ${
+              up ? styles.upPill : styles.downPill
+            }`}
+          >
+            {up ? "▲" : "▼"} {up ? "+" : ""}
+            {(stock.percentChange ?? 0).toFixed(2)}%
+          </span>
+        </td>
+        <td className={styles.tdPrice}>
+          ₹
+          {(stock.price ?? 0).toLocaleString("en-IN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </td>
+        <td className={styles.tdAction}>
+          <button
+            className={styles.tradeBtn}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate("/trade");
             }}
           >
-            {stock.symbol.slice(0, 2)}
+            Trade
+          </button>
+        </td>
+      </tr>
+
+      {/* ── Mobile card (hidden on desktop via CSS) ── */}
+      <tr className={styles.mobileCard}>
+        <td colSpan={6}>
+          <div
+            className={styles.mCard}
+            onClick={() => navigate(`/chart?symbol=${stock.symbol}`)}
+          >
+            <div className={styles.mCardLeft}>
+              <div
+                className={styles.stockLogo}
+                style={{
+                  background: `linear-gradient(135deg,${
+                    COLORS[idx % COLORS.length]
+                  },${COLORS[idx % COLORS.length]}88)`,
+                }}
+              >
+                {stock.symbol.slice(0, 2)}
+              </div>
+              <div>
+                <div className={styles.stockSymbol}>{stock.symbol}</div>
+                <div className={styles.stockName}>
+                  {stock.name?.split(" ").slice(0, 2).join(" ")}
+                </div>
+              </div>
+            </div>
+            <div className={styles.mCardRight}>
+              <div className={styles.mPrice}>
+                ₹
+                {(stock.price ?? 0).toLocaleString("en-IN", {
+                  maximumFractionDigits: 0,
+                })}
+              </div>
+              <div
+                className={`${styles.mChange} ${up ? styles.up : styles.down}`}
+              >
+                {up ? "▲" : "▼"} {Math.abs(stock.percentChange ?? 0).toFixed(2)}
+                %
+              </div>
+            </div>
+            <button
+              className={styles.tradeBtn}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate("/trade");
+              }}
+            >
+              Trade
+            </button>
           </div>
-          <div>
-            <div className={styles.stockSymbol}>{stock.symbol}</div>
-            <div className={styles.stockName}>{stock.name}</div>
-          </div>
-        </div>
-      </td>
-      <td className={styles.tdDate}>
-        {new Date().toLocaleDateString("en-IN", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        })}
-      </td>
-      <td className={styles.tdNum}>
-        {stock.volume ? (stock.volume / 1_00_000).toFixed(2) + "L" : "—"}
-      </td>
-      <td className={styles.tdChange}>
-        <span
-          className={`${styles.changePill} ${
-            up ? styles.upPill : styles.downPill
-          }`}
-        >
-          {up ? "▲" : "▼"} {up ? "+" : ""}
-          {(stock.percentChange ?? 0).toFixed(2)}%
-        </span>
-      </td>
-      <td className={styles.tdNum}>
-        ₹
-        {(stock.price ?? 0).toLocaleString("en-IN", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}
-      </td>
-      <td className={styles.tdAction}>
-        <button
-          className={styles.actionBtn}
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/trade`);
-          }}
-        >
-          TRADE
-        </button>
-      </td>
-    </tr>
+        </td>
+      </tr>
+    </>
   );
 }
 
 export default function StockTable({ stocks = [], loading }) {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
-  const [sort, setSort] = useState({ key: "symbol", dir: 1 });
+  const [sort, setSort] = useState({ key: "percentChange", dir: -1 });
 
   const filtered = stocks
     .filter(
@@ -128,181 +183,151 @@ export default function StockTable({ stocks = [], loading }) {
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const toggleSort = (key) => {
-    setSort((s) => ({ key, dir: s.key === key ? -s.dir : 1 }));
+    setSort((s) => ({ key, dir: s.key === key ? -s.dir : -1 }));
     setPage(1);
   };
-
   const sortIcon = (key) =>
-    sort.key === key ? (sort.dir > 0 ? " ↑" : " ↓") : " ↕";
+    sort.key === key ? (sort.dir > 0 ? " ↑" : " ↓") : "";
 
   return (
     <div className={styles.section}>
       <div className={styles.header}>
         <div className={styles.titleRow}>
-          <div className={styles.title}>Market Stocks</div>
+          <div className={styles.title}>All Stocks</div>
           <span className={styles.count}>{filtered.length} stocks</span>
         </div>
-        <div className={styles.actions}>
-          <div className={styles.searchBar}>
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#4a6370"
-              strokeWidth="2"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
-            </svg>
-            <input
-              className={styles.searchInput}
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setPage(1);
-              }}
-              placeholder="Search stock..."
-            />
-          </div>
-          <button className={styles.filterBtn}>
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <line x1="4" y1="6" x2="20" y2="6" />
-              <line x1="8" y1="12" x2="16" y2="12" />
-              <line x1="10" y1="18" x2="14" y2="18" />
-            </svg>
-            Filter
-          </button>
+        <div className={styles.searchBar}>
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#5a7080"
+            strokeWidth="2"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          <input
+            className={styles.searchInput}
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Search stock…"
+          />
         </div>
       </div>
 
-      <div className={styles.wrap}>
-        <div className={styles.scrollX}>
-          <table className={styles.table}>
-            <thead className={styles.thead}>
-              <tr>
-                <th
-                  className={styles.thLeft}
-                  onClick={() => toggleSort("symbol")}
-                >
-                  NAME STOCK{sortIcon("symbol")}
-                </th>
-                <th className={styles.thLeft}>TRADE DATE</th>
-                <th
-                  className={styles.thRight}
-                  onClick={() => toggleSort("volume")}
-                >
-                  VOLUME{sortIcon("volume")}
-                </th>
-                <th
-                  className={styles.thRight}
-                  onClick={() => toggleSort("percentChange")}
-                >
-                  CHANGE{sortIcon("percentChange")}
-                </th>
-                <th
-                  className={styles.thRight}
-                  onClick={() => toggleSort("price")}
-                >
-                  PRICE/STOCK{sortIcon("price")}
-                </th>
-                <th className={styles.thRight}>ACTION</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                Array.from({ length: 8 }).map((_, i) => (
-                  <tr key={i} className={styles.trow}>
-                    <td colSpan={6}>
-                      <div className={styles.skelRow}>
-                        <div
-                          className={styles.skelBar}
-                          style={{ width: 32, height: 32, borderRadius: "50%" }}
-                        />
-                        <div className={styles.skelBar} style={{ width: 80 }} />
-                        <div
-                          className={styles.skelBar}
-                          style={{ width: 120 }}
-                        />
-                        <div
-                          className={styles.skelBar}
-                          style={{ width: 60, marginLeft: "auto" }}
-                        />
-                        <div className={styles.skelBar} style={{ width: 80 }} />
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : paged.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className={styles.emptyState}>
-                    No stocks match "{query}"
+      <div className={styles.tableWrap}>
+        <table className={styles.table}>
+          <thead className={styles.thead}>
+            <tr>
+              <th
+                className={styles.thLeft}
+                onClick={() => toggleSort("symbol")}
+              >
+                Company {sortIcon("symbol")}
+              </th>
+              <th
+                className={styles.thRight}
+                onClick={() => toggleSort("volume")}
+              >
+                Volume {sortIcon("volume")}
+              </th>
+              <th className={styles.thRight}>Open</th>
+              <th
+                className={styles.thRight}
+                onClick={() => toggleSort("percentChange")}
+              >
+                Change {sortIcon("percentChange")}
+              </th>
+              <th
+                className={styles.thRight}
+                onClick={() => toggleSort("price")}
+              >
+                Price {sortIcon("price")}
+              </th>
+              <th className={styles.thRight}>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              Array.from({ length: 8 }).map((_, i) => (
+                <tr key={i} className={styles.skelRow}>
+                  <td colSpan={6}>
+                    <div className={styles.skelInner}>
+                      <div className={styles.skelCircle} />
+                      <div className={styles.skelBar} style={{ width: 80 }} />
+                      <div
+                        className={styles.skelBar}
+                        style={{ width: 120, marginLeft: "auto" }}
+                      />
+                      <div className={styles.skelBar} style={{ width: 70 }} />
+                      <div className={styles.skelBar} style={{ width: 90 }} />
+                    </div>
                   </td>
                 </tr>
-              ) : (
-                paged.map((s, i) => (
-                  <Row
-                    key={s.symbol}
-                    stock={s}
-                    idx={(page - 1) * PAGE_SIZE + i}
-                  />
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {!loading && totalPages > 1 && (
-          <div className={styles.pagination}>
-            <div className={styles.pageInfo}>
-              Showing {(page - 1) * PAGE_SIZE + 1}–
-              {Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
-            </div>
-            <div className={styles.pageButtons}>
-              <button
-                className={styles.pageBtn}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-              >
-                ‹
-              </button>
-              {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
-                const p = i + 1;
-                return (
-                  <button
-                    key={p}
-                    className={`${styles.pageBtn} ${
-                      page === p ? styles.pageBtnActive : ""
-                    }`}
-                    onClick={() => setPage(p)}
-                  >
-                    {p}
-                  </button>
-                );
-              })}
-              {totalPages > 5 && (
-                <span className={styles.pageBtn} style={{ cursor: "default" }}>
-                  …
-                </span>
-              )}
-              <button
-                className={styles.pageBtn}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-              >
-                ›
-              </button>
-            </div>
-          </div>
-        )}
+              ))
+            ) : paged.length === 0 ? (
+              <tr>
+                <td colSpan={6} className={styles.empty}>
+                  No stocks match "{query}"
+                </td>
+              </tr>
+            ) : (
+              paged.map((s, i) => (
+                <Row
+                  key={s.symbol}
+                  stock={s}
+                  idx={(page - 1) * PAGE_SIZE + i}
+                />
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
+
+      {!loading && totalPages > 1 && (
+        <div className={styles.pagination}>
+          <span className={styles.pageInfo}>
+            {(page - 1) * PAGE_SIZE + 1}–
+            {Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
+          </span>
+          <div className={styles.pageButtons}>
+            <button
+              className={styles.pageBtn}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              ‹
+            </button>
+            {Array.from({ length: Math.min(totalPages, 7) }).map((_, i) => {
+              const p = i + 1;
+              return (
+                <button
+                  key={p}
+                  className={`${styles.pageBtn} ${
+                    page === p ? styles.pageBtnActive : ""
+                  }`}
+                  onClick={() => setPage(p)}
+                >
+                  {p}
+                </button>
+              );
+            })}
+            {totalPages > 7 && <span className={styles.pageBtn}>…</span>}
+            <button
+              className={styles.pageBtn}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+            >
+              ›
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

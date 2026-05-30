@@ -1,8 +1,18 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useMemo } from "react";
 import styles from "./PortfolioChart.module.css";
 
-// Generate mock portfolio curve from real balance
+// Seeded pseudo-random so the curve is the SAME every render for a given balance
+// (no Math.random() on every call)
+function seededRandom(seed) {
+  let s = seed;
+  return () => {
+    s = (s * 16807 + 0) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
 function generateCurve(balance) {
+  const rand = seededRandom(Math.floor(balance));
   const months = [
     "Jan",
     "Feb",
@@ -19,80 +29,65 @@ function generateCurve(balance) {
   ];
   const now = new Date();
   const pts = [];
-  let val = balance * 0.55;
+  let val = balance * 0.72;
+
   for (let i = 11; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    val = val * (1 + (Math.random() * 0.12 - 0.03));
+    val = val * (1 + (rand() * 0.1 - 0.025));
     pts.push({
       label: months[d.getMonth()],
-      value: Math.round(val),
       year: d.getFullYear().toString().slice(2),
+      value: Math.round(val),
       active: i === 0,
     });
   }
-  // last point = current balance
   pts[pts.length - 1].value = balance;
   return pts;
 }
 
-// Build SVG path from data points
-function buildPath(points, w, h, minV, maxV) {
+function buildPath(points, W, H) {
+  const vals = points.map((p) => p.value);
+  const minV = Math.min(...vals) * 0.97;
+  const maxV = Math.max(...vals) * 1.02;
   const range = maxV - minV || 1;
-  const xs = points.map((_, i) => (i / (points.length - 1)) * w);
-  const ys = points.map((p) => h - ((p.value - minV) / range) * h);
 
-  // Smooth curve using cubic bezier
+  const xs = points.map((_, i) => (i / (points.length - 1)) * W);
+  const ys = points.map(
+    (p) => H - ((p.value - minV) / range) * (H * 0.85) - H * 0.05
+  );
+
   let d = `M ${xs[0]} ${ys[0]}`;
   for (let i = 1; i < points.length; i++) {
     const cpx = (xs[i - 1] + xs[i]) / 2;
     d += ` C ${cpx} ${ys[i - 1]}, ${cpx} ${ys[i]}, ${xs[i]} ${ys[i]}`;
   }
-  return { d, xs, ys };
+
+  const areaD = `${d} L ${xs[xs.length - 1]} ${H} L ${xs[0]} ${H} Z`;
+  return { d, areaD, xs, ys, minV, maxV };
 }
 
-const LOGO_COLORS = [
-  "#6366f1",
-  "#e53935",
-  "#10b981",
-  "#f59e0b",
-  "#8b5cf6",
-  "#06b6d4",
-];
-
-export default function PortfolioChart({
-  balance = 100000,
-  holdings = [],
-  bestStock,
-}) {
+export default function PortfolioChart({ balance = 100000 }) {
   const [tooltip, setTooltip] = useState(null);
   const [hoveredIdx, setHoveredIdx] = useState(null);
   const svgRef = useRef(null);
-  const W = 800,
-    H = 140;
+  const W = 900,
+    H = 160;
 
-  const points = generateCurve(balance);
-  const values = points.map((p) => p.value);
-  const minV = Math.min(...values) * 0.95;
-  const maxV = Math.max(...values) * 1.02;
-  const { d, xs, ys } = buildPath(points, W, H, minV, maxV);
+  // Stable — only recomputes when balance changes
+  const points = useMemo(() => generateCurve(balance), [balance]);
+  const { d, areaD, xs, ys } = useMemo(() => buildPath(points, W, H), [points]);
 
-  // area fill path
-  const areaD = `${d} L ${xs[xs.length - 1]} ${H} L ${xs[0]} ${H} Z`;
-
-  const profit = balance - points[0].value;
-  const profitPct = ((profit / points[0].value) * 100).toFixed(1);
-
-  const best = bestStock || {
-    symbol: "TCS",
-    name: "Tata Consultancy Services",
-  };
+  const startVal = points[0].value;
+  const gain = balance - startVal;
+  const gainPct = ((gain / startVal) * 100).toFixed(1);
+  const isUp = gain >= 0;
 
   const handleMouseMove = (e) => {
     if (!svgRef.current) return;
     const rect = svgRef.current.getBoundingClientRect();
     const mx = ((e.clientX - rect.left) / rect.width) * W;
-    let closest = 0;
-    let minDist = Infinity;
+    let closest = 0,
+      minDist = Infinity;
     xs.forEach((x, i) => {
       const dist = Math.abs(x - mx);
       if (dist < minDist) {
@@ -111,61 +106,27 @@ export default function PortfolioChart({
 
   return (
     <div className={styles.card}>
-      <div className={styles.topRow}>
-        {/* Portfolio value */}
-        <div className={styles.leftBlock}>
-          <div className={styles.label}>PORTFOLIO VALUE</div>
-          <div className={styles.portfolioValue}>
-            ₹{balance.toLocaleString("en-IN")}
-          </div>
-          <div className={styles.profitRow}>
-            <span>Your balance is</span>
-            <span className={styles.profitAmt}>
-              ₹{Number(balance).toLocaleString("en-IN")}
-            </span>
-            <span className={styles.profitBadge}>
-              {profitPct > 0 ? "+" : ""}
-              {profitPct}%
-            </span>
+      {/* Header */}
+      <div className={styles.header}>
+        <div>
+          <div className={styles.headerLabel}>Portfolio Value</div>
+          <div className={styles.headerValue}>
+            ₹{balance.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
           </div>
         </div>
-
-        {/* Stats */}
-        <div className={styles.statsRow}>
-          <div className={styles.statBlock}>
-            <div className={styles.statLabel}>AVG. MONTHLY GROWTH</div>
-            <div className={styles.statValue}>
-              ~{(parseFloat(profitPct) / 12).toFixed(1)}%
-            </div>
-            <div className={styles.statSub}>
-              ~₹{Math.round(profit / 12).toLocaleString("en-IN")}
-            </div>
-          </div>
-          <div className={styles.statBlock}>
-            <div className={styles.statLabel}>BEST STOCK</div>
-            <div className={styles.bestStock}>
-              <div
-                className={styles.bestLogoWrap}
-                style={{
-                  background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
-                }}
-              >
-                {best.symbol.slice(0, 2)}
-              </div>
-              <div>
-                <div className={styles.bestName}>{best.symbol}</div>
-                <div className={styles.bestSymbol}>
-                  {best.name?.split(" ").slice(0, 2).join(" ")}
-                </div>
-              </div>
-            </div>
-          </div>
+        <div
+          className={`${styles.badge} ${
+            isUp ? styles.badgeUp : styles.badgeDown
+          }`}
+        >
+          {isUp ? "▲" : "▼"} {isUp ? "+" : ""}
+          {gainPct}%
         </div>
       </div>
 
       {/* Chart */}
       <div
-        className={styles.chartArea}
+        className={styles.chartWrap}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => {
           setTooltip(null);
@@ -175,23 +136,26 @@ export default function PortfolioChart({
         <svg
           ref={svgRef}
           viewBox={`0 0 ${W} ${H}`}
-          className={styles.chartSvg}
+          className={styles.svg}
           preserveAspectRatio="none"
         >
           <defs>
-            <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#6366f1" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
-            </linearGradient>
-            <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#6366f1" />
-              <stop offset="50%" stopColor="#00b4d8" />
-              <stop offset="100%" stopColor="#00d68f" />
+            <linearGradient id="pgFill" x1="0" y1="0" x2="0" y2="1">
+              <stop
+                offset="0%"
+                stopColor={isUp ? "#22c55e" : "#ef4444"}
+                stopOpacity="0.18"
+              />
+              <stop
+                offset="100%"
+                stopColor={isUp ? "#22c55e" : "#ef4444"}
+                stopOpacity="0"
+              />
             </linearGradient>
           </defs>
 
-          {/* Grid lines */}
-          {[0.25, 0.5, 0.75].map((f) => (
+          {/* Subtle grid */}
+          {[0.3, 0.6, 0.9].map((f) => (
             <line
               key={f}
               x1="0"
@@ -203,20 +167,20 @@ export default function PortfolioChart({
             />
           ))}
 
-          {/* Area fill */}
-          <path d={areaD} fill="url(#chartGrad)" />
+          {/* Area */}
+          <path d={areaD} fill="url(#pgFill)" />
 
           {/* Line */}
           <path
             d={d}
             fill="none"
-            stroke="url(#lineGrad)"
-            strokeWidth="2.5"
+            stroke={isUp ? "#22c55e" : "#ef4444"}
+            strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
 
-          {/* Hover vertical line */}
+          {/* Hover */}
           {hoveredIdx !== null && (
             <>
               <line
@@ -224,23 +188,17 @@ export default function PortfolioChart({
                 y1="0"
                 x2={xs[hoveredIdx]}
                 y2={H}
-                stroke="rgba(255,255,255,0.12)"
+                stroke="rgba(255,255,255,0.1)"
                 strokeWidth="1"
-                strokeDasharray="4 4"
+                strokeDasharray="3 3"
               />
               <circle
                 cx={xs[hoveredIdx]}
                 cy={ys[hoveredIdx]}
-                r="5"
-                fill="#6366f1"
-                stroke="rgba(255,255,255,0.3)"
-                strokeWidth="2"
-              />
-              <circle
-                cx={xs[hoveredIdx]}
-                cy={ys[hoveredIdx]}
-                r="10"
-                fill="rgba(99,102,241,0.15)"
+                r="4"
+                fill={isUp ? "#22c55e" : "#ef4444"}
+                stroke="rgba(255,255,255,0.4)"
+                strokeWidth="1.5"
               />
             </>
           )}
@@ -251,31 +209,30 @@ export default function PortfolioChart({
           <div
             className={styles.tooltip}
             style={{
-              left: `clamp(10px, ${tooltip.x}%, calc(100% - 140px))`,
-              top: `${Math.max(0, tooltip.y - 20)}%`,
-              transform: "translateY(-100%)",
+              left: `clamp(8px, ${tooltip.x}%, calc(100% - 130px))`,
+              top: "8px",
             }}
           >
-            <div className={styles.tooltipValue}>
-              ₹{tooltip.value.toLocaleString("en-IN")}
+            <div className={styles.ttValue}>
+              ₹
+              {tooltip.value.toLocaleString("en-IN", {
+                maximumFractionDigits: 0,
+              })}
             </div>
-            <div className={styles.tooltipLabel}>Value | {tooltip.label}</div>
+            <div className={styles.ttLabel}>{tooltip.label}</div>
           </div>
         )}
       </div>
 
-      {/* X-axis */}
-      <div className={styles.xLabels}>
-        {points.map((p, i) => (
-          <span
-            key={i}
-            className={`${styles.xLabel} ${
-              hoveredIdx === i || p.active ? styles.xLabelActive : ""
-            }`}
-          >
-            {p.label.slice(0, 3)} '{p.year}
-          </span>
-        ))}
+      {/* X-axis labels */}
+      <div className={styles.xAxis}>
+        {points
+          .filter((_, i) => i % 2 === 0)
+          .map((p, i) => (
+            <span key={i} className={styles.xLabel}>
+              {p.label}
+            </span>
+          ))}
       </div>
     </div>
   );

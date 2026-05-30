@@ -1,63 +1,78 @@
 import express from "express";
 import Stock from "../models/Stock.js";
-import {
-  getLiveStockData,
-  getLiveBatchStockData,
-  searchStock,
-} from "../services/stockService.js";
-import protect from "../middlewares/authMiddleware.js";
+import { getLiveStockData, searchStock } from "../services/stockService.js";
+import { protect } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-// GET /stocks - list all symbols in registry with live prices
 router.get("/", protect, async (req, res) => {
   try {
     const stocks = await Stock.find().select("-__v");
-    const symbols = stocks.map((s) => s.symbol);
-
-    const liveData = await getLiveBatchStockData(symbols);
-
-    const merged = stocks.map((s) => {
-      const live = liveData.find((l) => l.symbol === s.symbol) || {};
-      return {
-        symbol: s.symbol,
-        name: s.name,
-        exchange: s.exchange,
-        price: live.price ?? null,
-        change: live.change ?? null,
-        percentChange: live.percentChange ?? null,
-      };
-    });
-
-    res.json({ stocks: merged });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.json({ stocks });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 
-// GET /stocks/quote/:symbol - get live quote for one stock
+// PUBLIC — no auth, needed by landing page
+router.get("/search", async (req, res) => {
+  const { q } = req.query;
+  if (!q) return res.status(400).json({ message: "q required" });
+  try {
+    const dbMatches = await Stock.find({
+      $or: [
+        { symbol: { $regex: q.toUpperCase(), $options: "i" } },
+        { name: { $regex: q, $options: "i" } },
+      ],
+    }).limit(6);
+    const dbFmt = dbMatches.map((s) => ({
+      symbol: s.symbol,
+      shortname: s.name,
+      longname: s.name,
+      exchDisp: s.exchange,
+    }));
+    let yahoo = [];
+    try {
+      yahoo = await searchStock(q);
+    } catch {}
+    const seen = new Set(dbFmt.map((r) => r.symbol));
+    res.json({
+      results: [...dbFmt, ...yahoo.filter((r) => !seen.has(r.symbol))].slice(
+        0,
+        10
+      ),
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Dynamically register any Yahoo Finance symbol into the DB
+router.post("/add", protect, async (req, res) => {
+  const symbol = req.body.symbol?.toUpperCase();
+  if (!symbol) return res.status(400).json({ message: "symbol required" });
+  try {
+    const existing = await Stock.findOne({ symbol });
+    if (existing) return res.json({ stock: existing, added: false });
+    const live = await getLiveStockData(symbol);
+    if (!live) return res.status(404).json({ message: `${symbol} not found` });
+    const stock = await Stock.create({
+      symbol,
+      name: live.name || symbol,
+      exchange: live.exchange || "NSE",
+    });
+    res.status(201).json({ stock, added: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 router.get("/quote/:symbol", protect, async (req, res) => {
   try {
-    const symbol = req.params.symbol.toUpperCase();
-    const data = await getLiveStockData(symbol);
+    const data = await getLiveStockData(req.params.symbol.toUpperCase());
     res.json(data);
-  } catch (error) {
-    res.status(error.status || 500).json({ message: error.message });
-  }
-});
-
-// GET /stocks/search?q=query - search by company name
-router.get("/search", protect, async (req, res) => {
-  try {
-    const { q } = req.query;
-    if (!q)
-      return res
-        .status(400)
-        .json({ message: "Query parameter 'q' is required" });
-    const results = await searchStock(q);
-    res.json({ results });
-  } catch (error) {
-    res.status(error.status || 500).json({ message: error.message });
+  } catch (err) {
+    res.status(err.status || 500).json({ message: err.message });
   }
 });
 

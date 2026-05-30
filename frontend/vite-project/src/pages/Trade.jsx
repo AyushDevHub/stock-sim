@@ -1,220 +1,389 @@
 import { useState } from "react";
-import { usePrices } from "../hooks/usePrices.js";
-import TradePanel from "../components/TradePanel/TradePanel.jsx";
-import PriceRow from "../components/PriceRow/PriceRow.jsx";
+import { usePrices } from "../hooks/UsePrices.js";
+import api from "../services/api.js";
+import { useAuth } from "../context/AuthContext.jsx";
+import styles from "./Trade.module.css";
+
+const COLORS = [
+  "#6366f1",
+  "#e53935",
+  "#10b981",
+  "#f59e0b",
+  "#8b5cf6",
+  "#06b6d4",
+  "#f97316",
+  "#3b82f6",
+  "#84cc16",
+  "#ec4899",
+];
 
 export default function Trade() {
   const { prices, loading } = usePrices();
+  const { user, login } = useAuth();
   const [selected, setSelected] = useState(null);
+  const [side, setSide] = useState("buy");
+  const [qty, setQty] = useState("");
+  const [query, setQuery] = useState("");
+  const [msg, setMsg] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [mobilePanel, setMobilePanel] = useState(false);
 
   const stock = prices.find((p) => p.symbol === selected);
+  const total = stock?.price && qty ? stock.price * Number(qty) : null;
+  const up = (stock?.change ?? 0) >= 0;
+
+  const filtered = prices.filter(
+    (s) =>
+      !query ||
+      s.symbol.includes(query.toUpperCase()) ||
+      s.name?.toUpperCase().includes(query.toUpperCase())
+  );
+
+  const handleSelect = (sym) => {
+    setSelected(sym);
+    setQty("");
+    setMsg(null);
+    setMobilePanel(true);
+  };
+
+  const submit = async () => {
+    if (!qty || Number(qty) <= 0)
+      return setMsg({ type: "error", text: "Enter a valid quantity" });
+    setSubmitting(true);
+    setMsg(null);
+    try {
+      const { data } = await api.post(`/trade/${side}`, {
+        symbol: selected,
+        quantity: Number(qty),
+      });
+      setMsg({
+        type: "success",
+        text: `✓ ${
+          side === "buy" ? "Bought" : "Sold"
+        } ${qty} × ${selected} @ ₹${data.order.price}`,
+      });
+      const stored = JSON.parse(localStorage.getItem("user") || "{}");
+      const updated = { ...stored, balance: data.balance };
+      localStorage.setItem("user", JSON.stringify(updated));
+      login(updated, localStorage.getItem("token"));
+      setQty("");
+    } catch (e) {
+      setMsg({
+        type: "error",
+        text: e.response?.data?.message || "Order failed. Try again.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
-    <div style={{ padding: 24, maxWidth: 1400, margin: "0 auto" }}>
-      <div style={{ marginBottom: 20 }}>
-        <div
-          style={{
-            fontFamily: "Syne, sans-serif",
-            fontSize: "1.1rem",
-            fontWeight: 700,
-            color: "#c8d8de",
-          }}
-        >
-          Trade
-        </div>
-        <div style={{ fontSize: "0.65rem", color: "#4a6370", marginTop: 2 }}>
-          Select a stock to place an order
-        </div>
-      </div>
-
-      <div
-        style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 16 }}
-      >
-        {/* Stock list */}
-        <div
-          style={{
-            background: "#0d1417",
-            border: "1px solid #1a2428",
-            borderRadius: "4px",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              padding: "10px 16px",
-              borderBottom: "1px solid #1a2428",
-              fontSize: "0.6rem",
-              color: "#4a6370",
-              letterSpacing: "0.12em",
-            }}
-          >
-            SELECT STOCK
+    <div className={styles.page}>
+      <div className={styles.inner}>
+        {/* Page header */}
+        <div className={styles.pageHeader}>
+          <div>
+            <h1 className={styles.pageTitle}>Trade</h1>
+            <p className={styles.pageSub}>
+              Search and place orders on NSE stocks
+            </p>
           </div>
-          {loading ? (
-            <div
-              style={{
-                padding: 32,
-                textAlign: "center",
-                fontSize: "0.7rem",
-                color: "#4a6370",
-              }}
-            >
-              Loading...
+          {user && (
+            <div className={styles.balanceChip}>
+              <span className={styles.balLabel}>Balance</span>
+              <span className={styles.balVal}>
+                ₹
+                {Number(user.balance ?? 0).toLocaleString("en-IN", {
+                  maximumFractionDigits: 0,
+                })}
+              </span>
             </div>
-          ) : (
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid #1a2428" }}>
-                  {[
-                    "SYMBOL / NAME",
-                    "PRICE",
-                    "CHANGE",
-                    "CHANGE %",
-                    "VOLUME",
-                    "STATUS",
-                  ].map((h) => (
-                    <th
-                      key={h}
-                      style={{
-                        padding: "8px 16px",
-                        fontSize: "0.6rem",
-                        color: "#4a6370",
-                        letterSpacing: "0.1em",
-                        textAlign: h === "SYMBOL / NAME" ? "left" : "right",
-                        fontWeight: 400,
-                      }}
+          )}
+        </div>
+
+        <div className={styles.layout}>
+          {/* ── Stock list ── */}
+          <div
+            className={`${styles.stocksPanel} ${
+              mobilePanel ? styles.hideOnMobile : ""
+            }`}
+          >
+            <div className={styles.search}>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#5a7080"
+                strokeWidth="2"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+              <input
+                className={styles.searchInput}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search symbol or company…"
+              />
+              {query && (
+                <button
+                  className={styles.clearBtn}
+                  onClick={() => setQuery("")}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            <div className={styles.stockList}>
+              {loading
+                ? Array.from({ length: 10 }).map((_, i) => (
+                    <div key={i} className={styles.skelRow} />
+                  ))
+                : filtered.map((s, i) => {
+                    const isSelected = selected === s.symbol;
+                    const sUp = (s.change ?? 0) >= 0;
+                    return (
+                      <div
+                        key={s.symbol}
+                        className={`${styles.stockRow} ${
+                          isSelected ? styles.stockSelected : ""
+                        }`}
+                        onClick={() => handleSelect(s.symbol)}
+                      >
+                        <div
+                          className={styles.sLogo}
+                          style={{
+                            background: `linear-gradient(135deg,${
+                              COLORS[i % COLORS.length]
+                            },${COLORS[i % COLORS.length]}99)`,
+                          }}
+                        >
+                          {s.symbol.slice(0, 2)}
+                        </div>
+                        <div className={styles.sInfo}>
+                          <div className={styles.sSym}>{s.symbol}</div>
+                          <div className={styles.sName}>
+                            {s.name?.slice(0, 28)}
+                          </div>
+                        </div>
+                        <div className={styles.sRight}>
+                          <div className={styles.sPrice}>
+                            ₹
+                            {(s.price ?? 0).toLocaleString("en-IN", {
+                              maximumFractionDigits: 0,
+                            })}
+                          </div>
+                          <div
+                            className={`${styles.sChg} ${
+                              sUp ? styles.up : styles.down
+                            }`}
+                          >
+                            {sUp ? "▲" : "▼"}{" "}
+                            {Math.abs(s.percentChange ?? 0).toFixed(2)}%
+                          </div>
+                        </div>
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#3a5060"
+                          strokeWidth="2"
+                        >
+                          <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                      </div>
+                    );
+                  })}
+            </div>
+          </div>
+
+          {/* ── Order Panel ── */}
+          <div
+            className={`${styles.orderPanel} ${
+              mobilePanel && selected ? styles.showOnMobile : ""
+            }`}
+          >
+            {mobilePanel && (
+              <button
+                className={styles.backBtn}
+                onClick={() => setMobilePanel(false)}
+              >
+                ← Back to stocks
+              </button>
+            )}
+
+            {!selected ? (
+              <div className={styles.emptyPanel}>
+                <div className={styles.emptyIcon}>👈</div>
+                <div className={styles.emptyTitle}>Select a stock</div>
+                <div className={styles.emptySub}>
+                  Pick any stock from the list to place an order
+                </div>
+              </div>
+            ) : (
+              <div className={styles.orderCard}>
+                {/* Stock info */}
+                <div className={styles.orderStock}>
+                  <div>
+                    <div className={styles.orderSym}>{selected}</div>
+                    <div className={styles.orderName}>{stock?.name}</div>
+                  </div>
+                  <div className={styles.orderPriceBlock}>
+                    <div className={styles.orderPrice}>
+                      ₹
+                      {(stock?.price ?? 0).toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </div>
+                    <div
+                      className={`${styles.orderChange} ${
+                        up ? styles.up : styles.down
+                      }`}
                     >
-                      {h}
-                    </th>
+                      {up ? "▲" : "▼"} {Math.abs(stock?.change ?? 0).toFixed(2)}{" "}
+                      ({Math.abs(stock?.percentChange ?? 0).toFixed(2)}%)
+                    </div>
+                  </div>
+                </div>
+
+                {/* OHLC */}
+                <div className={styles.ohlc}>
+                  {[
+                    ["O", stock?.open],
+                    ["H", stock?.high],
+                    ["L", stock?.low],
+                    ["C", stock?.previousClose],
+                  ].map(([l, v]) => (
+                    <div key={l} className={styles.ohlcItem}>
+                      <div className={styles.ohlcLabel}>{l}</div>
+                      <div className={styles.ohlcVal}>
+                        {v
+                          ? `₹${v.toLocaleString("en-IN", {
+                              maximumFractionDigits: 0,
+                            })}`
+                          : "—"}
+                      </div>
+                    </div>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {prices.map((s) => (
-                  <tr
-                    key={s.symbol}
-                    onClick={() => setSelected(s.symbol)}
-                    style={{
-                      borderBottom: "1px solid #1a2428",
-                      cursor: "pointer",
-                      background:
-                        selected === s.symbol
-                          ? "rgba(255,184,0,0.06)"
-                          : "transparent",
-                      outline:
-                        selected === s.symbol ? "1px solid #ffb80033" : "none",
+                </div>
+
+                {/* Buy / Sell toggle */}
+                <div className={styles.sideToggle}>
+                  <button
+                    className={`${styles.sideBtn} ${
+                      side === "buy" ? styles.sideBuy : ""
+                    }`}
+                    onClick={() => {
+                      setSide("buy");
+                      setMsg(null);
                     }}
                   >
-                    <td style={{ padding: "10px 16px" }}>
-                      <div
-                        style={{
-                          fontWeight: 600,
-                          fontSize: "0.8rem",
-                          color: selected === s.symbol ? "#ffb800" : "#c8d8de",
-                        }}
-                      >
-                        {s.symbol}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "0.65rem",
-                          color: "#4a6370",
-                          marginTop: 2,
-                        }}
-                      >
-                        {s.name?.slice(0, 28)}
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 16px",
-                        textAlign: "right",
-                        fontSize: "0.85rem",
-                        fontWeight: 600,
-                        color: "#c8d8de",
-                      }}
-                    >
-                      ₹
-                      {s.price?.toLocaleString("en-IN", {
-                        minimumFractionDigits: 2,
-                      })}
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 16px",
-                        textAlign: "right",
-                        fontSize: "0.75rem",
-                        color: s.change >= 0 ? "#00d68f" : "#ff4757",
-                      }}
-                    >
-                      {s.change >= 0 ? "▲" : "▼"}{" "}
-                      {Math.abs(s.change).toFixed(2)}
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 16px",
-                        textAlign: "right",
-                        fontSize: "0.75rem",
-                        color: s.change >= 0 ? "#00d68f" : "#ff4757",
-                      }}
-                    >
-                      {s.change >= 0 ? "+" : ""}
-                      {s.percentChange?.toFixed(2)}%
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 16px",
-                        textAlign: "right",
-                        fontSize: "0.7rem",
-                        color: "#4a6370",
-                      }}
-                    >
-                      {s.volume?.toLocaleString("en-IN")}
-                    </td>
-                    <td style={{ padding: "10px 16px", textAlign: "center" }}>
-                      <span
-                        style={{
-                          fontSize: "0.6rem",
-                          padding: "2px 6px",
-                          borderRadius: "2px",
-                          background:
-                            s.marketState === "REGULAR"
-                              ? "rgba(0,214,143,0.12)"
-                              : "rgba(74,99,112,0.2)",
-                          color:
-                            s.marketState === "REGULAR" ? "#00d68f" : "#4a6370",
-                          letterSpacing: "0.08em",
-                        }}
-                      >
-                        {s.marketState || "—"}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+                    Buy
+                  </button>
+                  <button
+                    className={`${styles.sideBtn} ${
+                      side === "sell" ? styles.sideSell : ""
+                    }`}
+                    onClick={() => {
+                      setSide("sell");
+                      setMsg(null);
+                    }}
+                  >
+                    Sell
+                  </button>
+                </div>
 
-        {/* Trade panel */}
-        <div>
-          {selected ? (
-            <TradePanel symbol={selected} price={stock?.price} />
-          ) : (
-            <div
-              style={{
-                background: "#0d1417",
-                border: "1px solid #1a2428",
-                borderRadius: "4px",
-                padding: 32,
-                textAlign: "center",
-              }}
-            >
-              <div style={{ fontSize: "0.7rem", color: "#4a6370" }}>
-                ← Select a stock to trade
+                {/* Qty */}
+                <div className={styles.qtyRow}>
+                  <div className={styles.qtyLabel}>Quantity</div>
+                  <div className={styles.qtyInput}>
+                    <button
+                      className={styles.qtyBtn}
+                      onClick={() =>
+                        setQty((q) =>
+                          Math.max(1, (Number(q) || 0) - 1).toString()
+                        )
+                      }
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      value={qty}
+                      onChange={(e) => setQty(e.target.value)}
+                      placeholder="0"
+                      className={styles.qtyField}
+                    />
+                    <button
+                      className={styles.qtyBtn}
+                      onClick={() =>
+                        setQty((q) => (Number(q || 0) + 1).toString())
+                      }
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* Total */}
+                {total !== null && (
+                  <div className={styles.totalRow}>
+                    <span className={styles.totalLabel}>Estimated Total</span>
+                    <span className={styles.totalVal}>
+                      ₹
+                      {total.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                )}
+
+                {/* Message */}
+                {msg && (
+                  <div
+                    className={`${styles.msg} ${
+                      msg.type === "success"
+                        ? styles.msgSuccess
+                        : styles.msgError
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+                )}
+
+                {/* Submit */}
+                <button
+                  className={`${styles.submitBtn} ${
+                    side === "buy" ? styles.submitBuy : styles.submitSell
+                  }`}
+                  onClick={submit}
+                  disabled={submitting || !qty}
+                >
+                  {submitting
+                    ? "Processing…"
+                    : side === "buy"
+                    ? `Buy ${selected}`
+                    : `Sell ${selected}`}
+                </button>
+
+                <div className={styles.balLine}>
+                  Available:{" "}
+                  <span>
+                    ₹
+                    {Number(user?.balance ?? 0).toLocaleString("en-IN", {
+                      maximumFractionDigits: 0,
+                    })}
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

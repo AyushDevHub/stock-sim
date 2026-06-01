@@ -3,30 +3,27 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--radius-md);
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
-.label {
-  font-size: 0.6rem;
-  color: var(--color-muted);
-  letter-spacing: 0.12em;
-  margin-bottom: 4px;
-}
-
+/* ── Section title ── */
 .sectionTitle {
   font-size: 0.6rem;
   color: var(--color-muted);
   letter-spacing: 0.12em;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
+/* ── Buy / Sell toggle ── */
 .toggle {
   display: flex;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 4px;
   overflow: hidden;
 }
-
 .toggleBtn {
   flex: 1;
   padding: 8px;
@@ -39,121 +36,136 @@
   transition: var(--transition);
   color: var(--color-muted);
 }
-.toggleBuy {
-  background: rgba(0, 214, 143, 0.12);
-  color: var(--color-green);
-}
-.toggleSell {
-  background: rgba(255, 71, 87, 0.12);
-  color: var(--color-red);
-}
+.toggleBuy  { background: rgba(0, 214, 143, 0.12); color: var(--color-green); }
+.toggleSell { background: rgba(255, 71, 87,  0.12); color: var(--color-red);   }
 
-.field {
-  margin-bottom: 12px;
-}
+/* ── 2-column row ── */
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-.value {
-  font-size: 0.85rem;
-  color: var(--color-text);
-  font-family: var(--font-mono);
-  padding: 4px 0;
+/* ── Generic field ── */
+.field { margin-bottom: 12px; }
+.label {
+  font-size: 0.58rem;
+  color: var(--color-muted);
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
 }
-.valueAmber {
-  color: var(--color-amber);
-  font-weight: 600;
-}
+.value { font-size: 0.85rem; color: var(--color-text); font-family: var(--font-mono); padding: 2px 0; }
+.valueAmber { color: var(--color-amber); font-weight: 600; }
 
-.input {
+/* ── Inputs ── */
+.input, .select {
   width: 100%;
   background: var(--color-bg);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 4px;
-  padding: 9px 10px;
+  padding: 8px 10px;
   color: var(--color-text);
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   outline: none;
   transition: border-color 0.2s;
 }
-.input:focus {
-  border-color: rgba(99, 102, 241, 0.4);
-}
+.input:focus, .select:focus { border-color: rgba(99, 102, 241, 0.4); }
+.select { appearance: none; cursor: pointer; }
 
-.totalBox {
-  margin-bottom: 14px;
-  padding: 9px 10px;
+/* ── Validity buttons ── */
+.validityRow { display: flex; gap: 6px; flex-wrap: wrap; }
+.validBtn {
+  padding: 5px 10px;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
   background: var(--color-bg);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 4px;
-}
-.totalAmt {
-  font-size: 0.9rem;
-  color: var(--color-amber);
-  margin-top: 2px;
-  font-weight: 700;
-}
-
-.balance {
-  margin-bottom: 16px;
-  font-size: 0.65rem;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 3px;
   color: var(--color-muted);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  transition: var(--transition);
 }
-.balanceAmt {
-  color: var(--color-green);
+.validActive {
+  background: rgba(99,102,241,0.15);
+  border-color: rgba(99,102,241,0.4);
+  color: var(--color-indigo);
 }
 
-.btnBuy,
-.btnSell {
+/* ── Brokerage preview ── */
+.brokerageBox {
+  margin-bottom: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+.brokerageToggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+}
+.brokerageTotal { color: var(--color-amber); font-weight: 700; font-size: 0.72rem; }
+.chevron { font-size: 0.5rem; margin-left: 4px; }
+
+.breakdown { padding: 2px 10px 10px; }
+.breakdownRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 0.65rem;
+  color: var(--color-text2);
+  font-family: var(--font-mono);
+}
+.breakdownDivider { border-top: 1px solid rgba(255,255,255,0.06); margin: 6px 0; }
+.breakdownHighlight span:last-child { color: var(--color-amber); font-weight: 700; }
+
+/* ── Balance line ── */
+.balance {
+  font-size: 0.62rem;
+  color: var(--color-muted);
+  letter-spacing: 0.06em;
+  margin-bottom: 14px;
+}
+.balanceAmt { color: var(--color-green); font-family: var(--font-mono); }
+
+/* ── CTA buttons ── */
+.btnBuy, .btnSell {
   width: 100%;
   padding: 11px;
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
   border-radius: 4px;
   cursor: pointer;
   font-family: var(--font-mono);
   transition: var(--transition);
   font-weight: 700;
 }
-.btnBuy {
-  background: rgba(0, 214, 143, 0.12);
-  border: 1px solid var(--color-green);
-  color: var(--color-green);
-}
-.btnBuy:hover {
-  background: rgba(0, 214, 143, 0.2);
-}
-.btnSell {
-  background: rgba(255, 71, 87, 0.12);
-  border: 1px solid var(--color-red);
-  color: var(--color-red);
-}
-.btnSell:hover {
-  background: rgba(255, 71, 87, 0.2);
-}
-.btnDisabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+.btnBuy  { background: rgba(0,214,143,0.12); border: 1px solid var(--color-green); color: var(--color-green); }
+.btnSell { background: rgba(255,71,87,0.12);  border: 1px solid var(--color-red);   color: var(--color-red);   }
+.btnBuy:hover  { background: rgba(0,214,143,0.22); }
+.btnSell:hover { background: rgba(255,71,87,0.22);  }
+.btnDisabled   { opacity: 0.4; cursor: not-allowed; }
 
-.msgSuccess {
+/* ── Messages ── */
+.msgSuccess, .msgError {
   margin-top: 10px;
-  padding: 9px 10px;
+  padding: 8px 10px;
   border-radius: 4px;
-  font-size: 0.7rem;
-  background: rgba(0, 214, 143, 0.08);
-  border: 1px solid rgba(0, 214, 143, 0.2);
-  color: var(--color-green);
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  line-height: 1.5;
 }
-.msgError {
-  margin-top: 10px;
-  padding: 9px 10px;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  background: rgba(255, 71, 87, 0.08);
-  border: 1px solid rgba(255, 71, 87, 0.2);
-  color: var(--color-red);
-}
+.msgSuccess { background: rgba(0,214,143,0.08); border: 1px solid rgba(0,214,143,0.2); color: var(--color-green); }
+.msgError   { background: rgba(255,71,87,0.08);  border: 1px solid rgba(255,71,87,0.2);  color: var(--color-red);   }
 
+/* ── Empty state ── */
 .empty {
   padding: 32px;
   text-align: center;

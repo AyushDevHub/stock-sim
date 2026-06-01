@@ -1,0 +1,140 @@
+/**
+ * ╔══════════════════════════════════════════════════════════════════════╗
+ * ║          FONT & NUMBER CUSTOMIZATION — stock-sim                    ║
+ * ║  Edit this file and save. Changes apply everywhere automatically.   ║
+ * ╚══════════════════════════════════════════════════════════════════════╝
+ *
+ * HOW TO USE:
+ *   1. Pick fonts from https://fonts.google.com
+ *   2. Paste the @import line from Google Fonts at the top of this file.
+ *   3. Change the CSS variable values below to match your chosen font names.
+ *   4. This file is imported in globals.css — save & the dev server hot-reloads.
+ *
+ * ─────────────────────────────────────────────────────────────────────
+ * STEP 1 – PASTE YOUR GOOGLE FONTS @IMPORT HERE
+ * ─────────────────────────────────────────────────────────────────────
+ *
+ * Example (replace with your own):
+ *
+ *   @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+ *
+ * Current fonts already loaded in index.html (no extra import needed):
+ *   – Inter            → good for body/headings
+ *   – DM Mono          → used for prices, numbers, ticker symbols
+ */
+
+/* @import url('https://fonts.googleapis.com/css2?family=YOUR_FONT_HERE&display=swap'); */
+
+
+/* ─────────────────────────────────────────────────────────────────────
+ * STEP 2 – CHANGE FONT NAMES BELOW
+ * ─────────────────────────────────────────────────────────────────────
+ *
+ *  --font-body    → used for: all readable text (headings, paragraphs, nav labels)
+ *  --font-display → used for: large hero numbers, section headers
+ *  --font-mono    → used for: price values, % changes, ticker symbols (legacy alias)
+ *  --font-num     → used for: ALL prices & numbers (preferred variable)
+ *
+ *  ⚠  --font-mono and --font-num should usually be the same (monospace)
+ *     so that price columns stay perfectly aligned.
+ */
+:root {
+
+  /* ── Body / heading font ────────────────────────────────────────── */
+  /* Suggestions: Inter, Outfit, Nunito, DM Sans, Poppins, Sora       */
+  --font-body:    "Inter", system-ui, -apple-system, sans-serif;
+
+  /* ── Display / hero font (big titles, dashboard header) ─────────── */
+  /* Suggestions: same as body, or Space Grotesk, Clash Display        */
+  --font-display: "Inter", system-ui, sans-serif;
+
+  /* ── Monospace for prices, numbers, tickers ─────────────────────── */
+  /* Suggestions: "DM Mono", "JetBrains Mono", "Fira Code", "IBM Plex Mono" */
+  --font-mono:    "DM Mono", ui-monospace, monospace;   /* legacy alias  */
+  --font-num:     "DM Mono", ui-monospace, monospace;   /* ← use this    */
+
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────
+ * STEP 3 – OPTIONAL NUMBER FORMATTING TWEAKS
+ * ─────────────────────────────────────────────────────────────────────
+ *
+ * These CSS properties fine-tune how numbers look without changing font.
+ */
+
+/* All elements that display prices / percentages */
+.num, .price, .pct,
+[class*="price"], [class*="Price"],
+[class*="change"], [class*="pct"],
+[class*="balance"], [class*="Balance"],
+[class*="total"], [class*="Total"],
+[class*="value"], [class*="Value"] {
+  font-family:         var(--font-num);
+
+  /* Tabular (fixed-width) figures keep columns aligned perfectly.
+     Works for OpenType fonts like DM Mono, JetBrains Mono, Fira Code. */
+  font-variant-numeric: tabular-nums;
+
+  /* Uncomment to enable slashed zero (0 with a slash, avoids 0/O confusion) */
+  /* font-variant-numeric: tabular-nums slashed-zero; */
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────
+ * STEP 4 – OPTIONAL SIZE / WEIGHT TWEAKS
+ * ─────────────────────────────────────────────────────────────────────
+ */
+:root {
+  /* Base body font size (px).  Increase for larger text, decrease to compact. */
+  /* font-size: 14px;   ← already set in globals.css */
+
+  /* Line-height for readability */
+  /* line-height: 1.5;  ← already set in globals.css */
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────
+ * QUICK-SWAP PRESETS  (uncomment one block at a time to try it out)
+ * ─────────────────────────────────────────────────────────────────────
+ */
+
+/* ── PRESET A: Space Grotesk + JetBrains Mono ──
+   @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+   :root {
+     --font-body:    "Space Grotesk", sans-serif;
+     --font-display: "Space Grotesk", sans-serif;
+     --font-mono:    "JetBrains Mono", monospace;
+     --font-num:     "JetBrains Mono", monospace;
+   }
+*/
+
+/* ── PRESET B: Outfit + IBM Plex Mono ──
+   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300..700&family=IBM+Plex+Mono:wght@400;500;700&display=swap');
+   :root {
+     --font-body:    "Outfit", sans-serif;
+     --font-display: "Outfit", sans-serif;
+     --font-mono:    "IBM Plex Mono", monospace;
+     --font-num:     "IBM Plex Mono", monospace;
+   }
+*/
+
+/* ── PRESET C: DM Sans + Fira Code ──
+   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300..700&family=Fira+Code:wght@400;500;700&display=swap');
+   :root {
+     --font-body:    "DM Sans", sans-serif;
+     --font-display: "DM Sans", sans-serif;
+     --font-mono:    "Fira Code", monospace;
+     --font-num:     "Fira Code", monospace;
+   }
+*/
+
+/* ── PRESET D: Sora + Source Code Pro ──
+   @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300..700&family=Source+Code+Pro:wght@400;500;700&display=swap');
+   :root {
+     --font-body:    "Sora", sans-serif;
+     --font-display: "Sora", sans-serif;
+     --font-mono:    "Source Code Pro", monospace;
+     --font-num:     "Source Code Pro", monospace;
+   }
+*/

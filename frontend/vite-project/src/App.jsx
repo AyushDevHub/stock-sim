@@ -11,10 +11,18 @@ import Portfolio from "./pages/Portfolio/Portfolio.jsx";
 import Scenarios from "./pages/Scenarios/Scenarios.jsx";
 import ScenarioArena from "./pages/Scenarios/ScenarioArena.jsx";
 
+// Redirects logged-in users away from public-only pages (landing, login, register)
+const PublicRoute = ({ children }) => {
+  const { isAuth } = useAuth();
+  return isAuth ? <Navigate to="/dashboard" replace /> : children;
+};
+
+// Redirects unauthenticated users to login
 const Protected = ({ children }) => {
   const { isAuth } = useAuth();
   return isAuth ? children : <Navigate to="/login" replace />;
 };
+
 const AppLayout = ({ children }) => (
   <>
     <Navbar />
@@ -26,9 +34,33 @@ export default function App() {
   return (
     <AuthProvider>
       <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* Public-only routes — logged-in users get sent to dashboard */}
+        <Route
+          path="/"
+          element={
+            <PublicRoute>
+              <Landing />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          }
+        />
+
+        {/* Protected routes */}
         <Route
           path="/dashboard"
           element={
@@ -87,6 +119,7 @@ export default function App() {
             </Protected>
           }
         />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>

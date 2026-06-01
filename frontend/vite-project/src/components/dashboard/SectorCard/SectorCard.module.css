@@ -113,7 +113,7 @@
   color: var(--color-muted);
 }
 
-/* Expanded stock list */
+/* ── Expanded stock list ─────────────────────────────────── */
 .stockList {
   background: var(--color-surface2);
   border-bottom: 1px solid var(--color-border);
@@ -121,22 +121,16 @@
 }
 
 @keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-4px)
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0)
-  }
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
+/* Desktop row: symbol | name (flex) | price+change | trade */
 .sRow {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 9px 20px;
+  gap: 10px;
+  padding: 9px 16px;
   border-bottom: 1px solid var(--color-border);
   cursor: pointer;
   transition: background 0.12s;
@@ -155,7 +149,7 @@
   font-size: 0.8rem;
   color: var(--color-text);
   font-family: var(--font-num);
-  width: 90px;
+  width: 80px;
   flex-shrink: 0;
 }
 
@@ -169,10 +163,11 @@
   white-space: nowrap;
 }
 
+/* price + % change grouped, fixed width so button never overflows */
 .sRight {
   text-align: right;
   flex-shrink: 0;
-  min-width: 100px;
+  width: 88px;
 }
 
 .sPrice {
@@ -189,7 +184,7 @@
 }
 
 .tradeBtn {
-  padding: 4px 12px;
+  padding: 4px 10px;
   background: rgba(99, 102, 241, 0.1);
   border: 1px solid rgba(99, 102, 241, 0.25);
   border-radius: 5px;
@@ -199,6 +194,7 @@
   cursor: pointer;
   font-family: var(--font-body);
   flex-shrink: 0;
+  white-space: nowrap;
   transition: background 0.15s;
 }
 
@@ -206,7 +202,7 @@
   background: rgba(99, 102, 241, 0.2);
 }
 
-/* Nifty 50 full table */
+/* ── Nifty 50 full table ─────────────────────────────────── */
 .niftyWrap {
   overflow: auto;
 }
@@ -272,43 +268,79 @@
   font-family: var(--font-num);
 }
 
-.up {
-  color: var(--color-green);
-}
-
-.down {
-  color: var(--color-red);
-}
+.up   { color: var(--color-green); }
+.down { color: var(--color-red); }
 
 .skel {
   height: 64px;
-  background: linear-gradient(90deg, var(--color-surface2) 25%, rgba(255, 255, 255, 0.03) 50%, var(--color-surface2) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface2) 25%,
+    rgba(255,255,255,0.03) 50%,
+    var(--color-surface2) 75%
+  );
   background-size: 200% 100%;
   animation: shimmer 1.4s infinite;
   border: 1px solid var(--color-border);
 }
 
 @keyframes shimmer {
-  0% {
-    background-position: 200% 0
-  }
-
-  100% {
-    background-position: -200% 0
-  }
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
-@media (max-width:640px) {
+/* ── Mobile ──────────────────────────────────────────────── */
+@media (max-width: 640px) {
   .grid {
     grid-template-columns: 1fr;
   }
 
-  .niftyHead,
-  .niftyRow {
-    grid-template-columns: 80px 1fr 80px 80px;
+  /* Stock rows in expanded sector: tighter layout */
+  .sRow {
+    padding: 8px 12px;
+    gap: 6px;
   }
 
-  .niftyRow>:nth-child(5) {
+  /* Shrink symbol col so name has room */
+  .sSymbol {
+    width: 68px;
+    font-size: 0.75rem;
+  }
+
+  /* Name still takes remaining space */
+  .sName {
+    font-size: 0.68rem;
+  }
+
+  /* Tighten price block */
+  .sRight {
+    width: 72px;
+  }
+
+  .sPrice {
+    font-size: 0.76rem;
+  }
+
+  .sChange {
+    font-size: 0.65rem;
+  }
+
+  /* Trade button — compact but always visible */
+  .tradeBtn {
+    padding: 3px 8px;
+    font-size: 0.68rem;
+  }
+
+  /* Nifty 50 table — hide name col, keep trade btn */
+  .niftyHead,
+  .niftyRow {
+    grid-template-columns: 80px 80px 80px 60px;
+    padding: 8px 12px;
+  }
+
+  /* Hide the "Name" column (2nd child) on mobile */
+  .niftyHead > :nth-child(2),
+  .niftyRow  > :nth-child(2) {
     display: none;
   }
 }

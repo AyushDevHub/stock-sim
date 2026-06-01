@@ -393,7 +393,7 @@ function StockList({ symbols, prices }) {
           >
             <div className={styles.sSymbol}>{sym}</div>
             <div className={styles.sName}>
-              {s?.name?.split(" ").slice(0, 3).join(" ") || sym}
+              {s?.name?.split(" ").slice(0, 3).join(" ") || "—"}
             </div>
             <div className={styles.sRight}>
               <div className={styles.sPrice}>

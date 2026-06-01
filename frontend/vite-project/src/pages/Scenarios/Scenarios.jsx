@@ -41,6 +41,26 @@ const SCENARIOS = [
     isLive: false,
   },
   {
+    id: "covid_crash",
+    name: "COVID Crash: March 2020",
+    tagline: "The fastest market crash in history. Can you survive it?",
+    description:
+      "NIFTY loses 40% in 38 days. Circuit breakers trigger twice. ₹17 lakh crore wiped out. You're a trader watching it happen in real-time. Every decision you make — buy, sell, or hold — is psychologically evaluated.",
+    difficulty: "intermediate",
+    duration: 300,
+    reward: 3000,
+    icon: "🦠",
+    color: "#ef4444",
+    tags: ["Historic Crash", "Psychology", "FOMO", "Circuit Breaker"],
+    players: 0,
+    completionRate: 0,
+    psychBadge: "CRISIS TESTED",
+    isCompetitive: false,
+    isLive: false,
+    isHistoric: true,
+    historicPeriod: "Feb 19 – Mar 23, 2020",
+  },
+  {
     id: "recession",
     name: "Recession Mode",
     tagline: "Slow bleed. No crash. Just patience.",
@@ -232,6 +252,9 @@ export default function Scenarios() {
                     {s.isLive && (
                       <span className={styles.liveBadge}>● LIVE</span>
                     )}
+                    {s.isHistoric && (
+                      <span className={styles.historicBadge}>📅 HISTORIC</span>
+                    )}
                   </div>
                 </div>
                 <div className={styles.scPsych}>{s.psychBadge}</div>
@@ -313,6 +336,17 @@ export default function Scenarios() {
                     {active.isCompetitive ? "Competitive" : "Solo"}
                   </div>
                 </div>
+                {active.isHistoric && active.historicPeriod && (
+                  <div className={styles.dStat}>
+                    <div className={styles.dLbl}>Historic Period</div>
+                    <div
+                      className={styles.dVal}
+                      style={{ color: active.color, fontSize: "0.7rem" }}
+                    >
+                      {active.historicPeriod}
+                    </div>
+                  </div>
+                )}
                 {best(active.id) !== null && (
                   <div className={styles.dStat}>
                     <div className={styles.dLbl}>Your Best</div>

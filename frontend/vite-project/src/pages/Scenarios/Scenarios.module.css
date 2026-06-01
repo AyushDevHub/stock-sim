@@ -588,3 +588,12 @@
     transform: none;
   }
 }
+.historicBadge {
+  font-size: 0.58rem;
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-weight: 700;
+}

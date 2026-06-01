@@ -9,6 +9,7 @@ import { bearCrashScenario } from "./bearCrash.js";
 import { recessionScenario } from "./recession.js";
 import { newsReactionScenario } from "./newsReaction.js";
 import { intradayScenario } from "./intraday.js";
+import { covidCrashScenario } from "./covidCrash.js";
 
 export const scenarioRegistry = {
   [bullMarketScenario.id]: bullMarketScenario,
@@ -16,6 +17,7 @@ export const scenarioRegistry = {
   [recessionScenario.id]: recessionScenario,
   [newsReactionScenario.id]: newsReactionScenario,
   [intradayScenario.id]: intradayScenario,
+  [covidCrashScenario.id]: covidCrashScenario,
 };
 
 export const getAllScenarios = () => Object.values(scenarioRegistry);
@@ -27,4 +29,5 @@ export {
   recessionScenario,
   newsReactionScenario,
   intradayScenario,
+  covidCrashScenario,
 };

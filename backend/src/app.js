@@ -9,6 +9,7 @@ import chartRoutes from "./routes/chartRoutes.js";
 import priceRoutes from "./routes/priceRoutes.js";
 import watchlistRoutes from "./routes/watchlistRoutes.js";
 import scenarioRoutes from "./routes/scenarioRoutes.js";
+import digestRoutes from "./routes/digestRoutes.js";
 
 const app = express();
 
@@ -61,7 +62,7 @@ app.use("/api/prices", priceRoutes);
 app.use("/api/watchlist", watchlistRoutes);
 
 app.use("/api/scenarios", scenarioRoutes);
-
+app.use("/api/digest", digestRoutes);
 /*
 |--------------------------------------------------------------------------
 | 404 Handler

@@ -14,6 +14,14 @@ const router = express.Router();
 
 /*
 |--------------------------------------------------------------------------
+| STATIC ROUTES FIRST (must be before /:id)
+|--------------------------------------------------------------------------
+*/
+
+router.get("/progress", protect, getUserProgress);
+
+/*
+|--------------------------------------------------------------------------
 | PUBLIC ROUTES
 |--------------------------------------------------------------------------
 */
@@ -29,8 +37,6 @@ router.post("/:id/simulate", simulateScenario);
 | PROTECTED ROUTES
 |--------------------------------------------------------------------------
 */
-
-router.get("/progress/me", protect, getUserProgress);
 
 router.post("/:id/complete", protect, completeScenario);
 

@@ -46,25 +46,19 @@ app.get("/health", (_, res) => {
 |--------------------------------------------------------------------------
 */
 
-app.use("/auth", authRoutes);
+app.use("/api/auth", authRoutes);
 
-app.use("/trade", tradeRoutes);
+app.use("/api/trade", tradeRoutes);
 
-app.use("/portfolio", portfolioRoutes);
+app.use("/api/portfolio", portfolioRoutes);
 
-app.use("/stocks", stockRoutes);
+app.use("/api/stocks", stockRoutes);
 
-app.use("/chart", chartRoutes);
+app.use("/api/chart", chartRoutes);
 
-app.use("/prices", priceRoutes);
+app.use("/api/prices", priceRoutes);
 
-app.use("/watchlist", watchlistRoutes);
-
-/*
-|--------------------------------------------------------------------------
-| Scenario Routes
-|--------------------------------------------------------------------------
-*/
+app.use("/api/watchlist", watchlistRoutes);
 
 app.use("/api/scenarios", scenarioRoutes);
 

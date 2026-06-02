@@ -4,7 +4,6 @@ import api from "../../services/api.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 import styles from "./Login.module.css";
 
-// Reuse OTP input from Register logic
 function OTPInput({ value, onChange, disabled }) {
   const inputs = useRef([]);
   const digits = value.split("").concat(Array(6).fill("")).slice(0, 6);
@@ -54,25 +53,24 @@ function OTPInput({ value, onChange, disabled }) {
 }
 
 export default function Login() {
-  const [step, setStep] = useState("form"); // "form" | "verify"
+  const [step, setStep] = useState("form");
   const [form, setForm] = useState({ email: "", password: "" });
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
-  const [resendCountdown, setResendCountdown] = useState(0);
+  const [countdown, setCountdown] = useState(0);
 
   const { login } = useAuth();
   const navigate = useNavigate();
   const pendingEmail = useRef("");
 
   useEffect(() => {
-    if (resendCountdown <= 0) return;
-    const id = setInterval(() => setResendCountdown((c) => c - 1), 1000);
+    if (countdown <= 0) return;
+    const id = setInterval(() => setCountdown((c) => c - 1), 1000);
     return () => clearInterval(id);
-  }, [resendCountdown]);
+  }, [countdown]);
 
-  // ── LOGIN ──────────────────────────────────────────────────────────────────
   const submitLogin = async (e) => {
     e?.preventDefault();
     setError("");
@@ -84,25 +82,22 @@ export default function Login() {
       navigate("/dashboard");
     } catch (err) {
       const d = err.response?.data;
-      // 403 = email not verified — switch to verify step
       if (err.response?.status === 403 && d?.requiresVerification) {
         pendingEmail.current = d.email || form.email;
-        // Auto-resend OTP so they have a fresh code
         await api
           .post("/auth/resend-otp", { email: pendingEmail.current })
           .catch(() => {});
         setStep("verify");
-        setResendCountdown(60);
-        setMsg("We sent a new verification code to your email.");
+        setCountdown(60);
+        setMsg("Verification code sent to your email.");
       } else {
-        setError(d?.message || "Invalid credentials");
+        setError(d?.message || "Invalid email or password");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  // ── VERIFY OTP ─────────────────────────────────────────────────────────────
   const submitOTP = async () => {
     if (otp.length < 6) return setError("Enter all 6 digits");
     setError("");
@@ -122,16 +117,15 @@ export default function Login() {
     }
   };
 
-  // ── RESEND ─────────────────────────────────────────────────────────────────
   const resend = async () => {
-    if (resendCountdown > 0) return;
+    if (countdown > 0) return;
     setError("");
     setMsg("");
     try {
       await api.post("/auth/resend-otp", { email: pendingEmail.current });
       setMsg("New code sent — check your inbox");
       setOtp("");
-      setResendCountdown(60);
+      setCountdown(60);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to resend");
     }
@@ -146,14 +140,14 @@ export default function Login() {
       <div className={styles.glow1} />
       <div className={styles.glow2} />
 
-      {/* Left panel */}
+      {/* ── Left panel ── */}
       <div className={styles.left}>
         <Link to="/" className={styles.logoRow}>
           <div className={styles.logoOrb}>S</div>
           <span className={styles.logoText}>StockSim</span>
         </Link>
 
-        <div>
+        <div className={styles.leftContent}>
           <div className={styles.eyebrow}>PAPER TRADING TERMINAL</div>
           <h1 className={styles.heading}>
             Welcome back,
@@ -172,7 +166,7 @@ export default function Login() {
             ["10s", "Price updates"],
             ["100%", "Risk free"],
           ].map(([v, l]) => (
-            <div key={l}>
+            <div key={l} className={styles.statItem}>
               <div className={styles.statVal}>{v}</div>
               <div className={styles.statLabel}>{l}</div>
             </div>
@@ -180,15 +174,23 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Right panel: form or OTP */}
+      <div className={styles.divider} />
+
+      {/* ── Right panel ── */}
       <div className={styles.right}>
-        <div className={styles.formCard}>
+        <div className={styles.formBox}>
+          {/* Mobile logo */}
+          <Link to="/" className={styles.mobileLogoRow}>
+            <div className={styles.logoOrb}>S</div>
+            <span className={styles.logoText}>StockSim</span>
+          </Link>
+
           {/* ─── LOGIN FORM ─── */}
           {step === "form" && (
             <>
               <h2 className={styles.formTitle}>Sign in</h2>
               <p className={styles.formSub}>
-                No account?{" "}
+                Don't have an account?{" "}
                 <Link to="/register" className={styles.formLink}>
                   Create one free
                 </Link>
@@ -229,19 +231,27 @@ export default function Login() {
                   disabled={loading}
                   onClick={submitLogin}
                 >
-                  {loading ? "SIGNING IN…" : "SIGN IN →"}
+                  {loading ? "Signing in…" : "Sign In →"}
                 </button>
+
+                <div className={styles.terms}>
+                  By signing in you agree to our Terms of Service
+                </div>
               </div>
             </>
           )}
 
-          {/* ─── OTP VERIFY ─── */}
+          {/* ─── OTP STEP ─── */}
           {step === "verify" && (
             <>
               <div className={styles.verifyIcon}>📬</div>
               <h2 className={styles.formTitle}>Verify your email</h2>
               <p className={styles.formSub}>
-                Code sent to <strong>{maskedEmail}</strong>
+                We sent a 6-digit code to{" "}
+                <strong className={styles.emailHighlight}>{maskedEmail}</strong>
+                .
+                <br />
+                Enter it below to sign in.
               </p>
 
               <div className={styles.fields}>
@@ -255,19 +265,17 @@ export default function Login() {
                   disabled={loading || otp.length < 6}
                   onClick={submitOTP}
                 >
-                  {loading ? "VERIFYING…" : "VERIFY & SIGN IN →"}
+                  {loading ? "Verifying…" : "Verify & Sign In →"}
                 </button>
 
                 <div className={styles.resendRow}>
-                  <span className={styles.resendLabel}>Didn't get it?</span>
+                  <span className={styles.resendLabel}>Didn't receive it?</span>
                   <button
                     className={styles.resendBtn}
                     onClick={resend}
-                    disabled={resendCountdown > 0}
+                    disabled={countdown > 0}
                   >
-                    {resendCountdown > 0
-                      ? `Resend in ${resendCountdown}s`
-                      : "Resend code"}
+                    {countdown > 0 ? `Resend in ${countdown}s` : "Resend code"}
                   </button>
                 </div>
 
@@ -277,6 +285,7 @@ export default function Login() {
                     setStep("form");
                     setError("");
                     setOtp("");
+                    setMsg("");
                   }}
                 >
                   ← Back to sign in

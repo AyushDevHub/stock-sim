@@ -1,333 +1,371 @@
-.page {
-  min-height: 100vh;
-  background: var(--color-bg);
-  display: flex;
-  font-family: var(--font-mono);
-  position: relative;
-  overflow: hidden;
-}
-.glow1 {
-  position: absolute;
-  top: -10%;
-  left: -10%;
-  width: 50vw;
-  height: 50vw;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(99, 102, 241, 0.1) 0%,
-    transparent 70%
-  );
-  pointer-events: none;
-}
-.glow2 {
-  position: absolute;
-  bottom: -10%;
-  right: -10%;
-  width: 40vw;
-  height: 40vw;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(0, 180, 216, 0.07) 0%,
-    transparent 70%
-  );
-  pointer-events: none;
-}
-.left {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 48px clamp(32px, 5vw, 72px);
-  position: relative;
-  z-index: 1;
-}
-.logoRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 48px;
-  cursor: pointer;
-  text-decoration: none;
-}
-.logoOrb {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #00b4d8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 0.75rem;
-  color: #fff;
-}
-.logoText {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.1rem;
-  color: var(--color-text);
-}
+/* ═══════════════════════════════════════════════════════════
+   Login.module.css — complete replacement
+   Font: Inter (body), DM Mono only for numbers
+   ═══════════════════════════════════════════════════════════ */
 
-.eyebrow {
-  font-size: 0.6rem;
-  color: var(--color-indigo);
-  letter-spacing: 0.18em;
-  margin-bottom: 12px;
-}
-.heading {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(1.8rem, 3vw, 2.6rem);
-  color: var(--color-text);
-  margin: 0 0 16px;
-  line-height: 1.1;
-}
-.headingGradient {
-  background: linear-gradient(135deg, #6366f1, #00b4d8, #00d68f);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.subtext {
-  font-size: 0.78rem;
-  color: var(--color-muted);
-  line-height: 1.8;
-  margin: 0;
-}
-.statsRow {
-  display: flex;
-  gap: 32px;
-  margin-top: 48px;
-}
-.statVal {
-  font-family: var(--font-display);
-  font-size: 1.2rem;
-  font-weight: 800;
-  color: var(--color-text);
-}
-.statLabel {
-  font-size: 0.6rem;
-  color: var(--color-muted);
-  margin-top: 2px;
-  letter-spacing: 0.1em;
-}
-
-.divider {
-  width: 1px;
-  background: rgba(255, 255, 255, 0.05);
-  flex-shrink: 0;
-}
-
-.right {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(32px, 5vw, 48px) clamp(20px, 4vw, 48px);
-  position: relative;
-  z-index: 1;
-  min-height: 100vh;
-}
-.formBox {
-  width: 100%;
-  max-width: 400px;
-}
-.formTitle {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(1.4rem, 3vw, 1.8rem);
-  color: var(--color-text);
-  margin: 0 0 6px;
-}
-.formSub {
-  font-size: 0.72rem;
-  color: var(--color-muted);
-  margin: 0 0 28px;
-}
-.formLink {
-  color: var(--color-indigo);
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.fields {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.fieldLabel {
-  font-size: 0.62rem;
-  color: var(--color-muted);
-  letter-spacing: 0.1em;
-  display: block;
-  margin-bottom: 6px;
-}
-.fieldInput {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-md);
-  padding: 12px 14px;
-  color: var(--color-text);
-  outline: none;
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  transition: border-color 0.2s;
-  box-sizing: border-box;
-}
-.fieldInput:focus {
-  border-color: rgba(99, 102, 241, 0.5);
-}
-
-.error {
-  padding: 10px 14px;
-  background: rgba(255, 71, 87, 0.1);
-  border: 1px solid rgba(255, 71, 87, 0.2);
-  border-radius: var(--radius-md);
-  font-size: 0.72rem;
-  color: var(--color-red);
-}
-.btnSubmit {
-  padding: 13px;
-  margin-top: 4px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  border: none;
-  border-radius: var(--radius-md);
-  color: #fff;
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  font-family: var(--font-mono);
-  font-weight: 700;
-  box-shadow: var(--shadow-glow-indigo);
-  transition: opacity 0.2s;
-  width: 100%;
-}
-.btnSubmit:hover {
-  opacity: 0.88;
-}
-.btnSubmit:disabled {
-  opacity: 0.5;
-  cursor: wait;
-}
-.terms {
-  text-align: center;
-  font-size: 0.62rem;
-  color: var(--color-muted2);
-}
-
-/* mobile logo shown on right side */
-.mobileLogoRow {
-  display: none;
-  margin-bottom: 24px;
-}
-
-/* ── Append these to your existing Login.module.css ──────────────────────── */
-
-.verifyIcon {
-  font-size: 2.2rem;
-  text-align: center;
-  margin-bottom: 10px;
-}
-
-.otpRow {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin: 8px 0 4px;
-}
-
-.otpBox {
-  width: 46px;
-  height: 54px;
-  text-align: center;
-  font-size: 1.4rem;
-  font-weight: 800;
-  font-family: var(--font-num);
-  background: var(--color-bg);
-  border: 2px solid var(--color-border2);
-  border-radius: var(--radius-md);
-  color: var(--color-text);
-  outline: none;
-  caret-color: transparent;
-  transition: border-color 0.18s, box-shadow 0.18s;
-}
-
-.otpBox:focus {
-  border-color: var(--color-indigo);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-}
-
-.otpBoxFilled {
-  border-color: var(--color-indigo);
-  background: rgba(99, 102, 241, 0.06);
-}
-
-.success {
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.25);
-  border-radius: var(--radius-sm);
-  padding: 10px 14px;
-  font-size: 0.8rem;
-  color: var(--color-green);
-}
-
-.resendRow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 2px;
-}
-
-.resendLabel {
-  font-size: 0.78rem;
-  color: var(--color-muted);
-}
-
-.resendBtn {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--color-indigo);
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font-body);
-  padding: 0;
-  transition: opacity 0.18s;
-}
-
-.resendBtn:disabled { color: var(--color-muted); cursor: default; }
-.resendBtn:not(:disabled):hover { opacity: 0.75; }
-
-.backBtn {
-  width: 100%;
-  background: none;
-  border: none;
-  font-size: 0.78rem;
-  color: var(--color-muted);
-  cursor: pointer;
-  font-family: var(--font-body);
-  padding: 4px 0;
-  text-align: center;
-  transition: color 0.15s;
-}
-.backBtn:hover { color: var(--color-text2); }
-
-@media (max-width: 768px) {
+   .page {
+    min-height: 100vh;
+    background: var(--color-bg);
+    display: flex;
+    font-family: var(--font-body);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Ambient glows */
+  .glow1 {
+    position: absolute;
+    top: -10%; left: -10%;
+    width: 50vw; height: 50vw;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .glow2 {
+    position: absolute;
+    bottom: -10%; right: -10%;
+    width: 40vw; height: 40vw;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(6,182,212,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  
+  /* ── Left panel ── */
   .left {
-    display: none;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: clamp(32px, 5vw, 56px) clamp(32px, 5vw, 72px);
+    position: relative;
+    z-index: 1;
   }
-  .divider {
-    display: none;
-  }
-  .mobileLogoRow {
+  
+  .logoRow {
     display: flex;
     align-items: center;
-    gap: 8px;
-    cursor: pointer;
+    gap: 10px;
+    text-decoration: none;
   }
-}
+  
+  .logoOrb {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--color-indigo);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 0.78rem;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  
+  .logoText {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: -0.01em;
+  }
+  
+  .leftContent { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  
+  .eyebrow {
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--color-indigo);
+    letter-spacing: 0.16em;
+    margin-bottom: 14px;
+  }
+  
+  .heading {
+    font-size: clamp(1.9rem, 3.2vw, 2.8rem);
+    font-weight: 800;
+    color: var(--color-text);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin: 0 0 16px;
+  }
+  
+  .headingGradient {
+    background: linear-gradient(135deg, #6366f1, #06b6d4, #22c55e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .subtext {
+    font-size: 0.88rem;
+    color: var(--color-text2);
+    line-height: 1.7;
+    max-width: 380px;
+  }
+  
+  .statsRow {
+    display: flex;
+    gap: 32px;
+    padding-top: 40px;
+  }
+  
+  .statItem {}
+  
+  .statVal {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--color-text);
+    font-family: var(--font-num);
+    letter-spacing: -0.01em;
+  }
+  
+  .statLabel {
+    font-size: 0.65rem;
+    color: var(--color-muted);
+    margin-top: 2px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  
+  /* Divider */
+  .divider {
+    width: 1px;
+    background: rgba(255,255,255,0.05);
+    flex-shrink: 0;
+  }
+  
+  /* ── Right panel ── */
+  .right {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(32px, 5vw, 48px) clamp(20px, 4vw, 56px);
+    position: relative;
+    z-index: 1;
+  }
+  
+  .formBox {
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  /* Mobile logo — hidden on desktop */
+  .mobileLogoRow {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 28px;
+    text-decoration: none;
+  }
+  
+  /* Form header */
+  .formTitle {
+    font-size: clamp(1.4rem, 3vw, 1.8rem);
+    font-weight: 800;
+    color: var(--color-text);
+    letter-spacing: -0.02em;
+    margin: 0 0 6px;
+  }
+  
+  .formSub {
+    font-size: 0.82rem;
+    color: var(--color-muted);
+    margin: 0 0 26px;
+    line-height: 1.5;
+  }
+  
+  .formLink {
+    color: var(--color-indigo);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .formLink:hover { text-decoration: underline; }
+  
+  /* Fields */
+  .fields {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  
+  .fieldLabel {
+    display: block;
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: var(--color-muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+  
+  .fieldInput {
+    width: 100%;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border2);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    color: var(--color-text);
+    outline: none;
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    transition: border-color 0.18s, box-shadow 0.18s;
+    box-sizing: border-box;
+  }
+  
+  .fieldInput::placeholder { color: var(--color-muted); }
+  
+  .fieldInput:focus {
+    border-color: rgba(99,102,241,0.5);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+  }
+  
+  /* Error / success */
+  .error {
+    padding: 10px 14px;
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: var(--radius-md);
+    font-size: 0.78rem;
+    color: var(--color-red);
+    line-height: 1.5;
+  }
+  
+  .success {
+    padding: 10px 14px;
+    background: rgba(34,197,94,0.1);
+    border: 1px solid rgba(34,197,94,0.25);
+    border-radius: var(--radius-md);
+    font-size: 0.78rem;
+    color: var(--color-green);
+    line-height: 1.5;
+  }
+  
+  /* Submit button */
+  .btnSubmit {
+    width: 100%;
+    padding: 13px;
+    background: var(--color-indigo);
+    border: none;
+    border-radius: var(--radius-md);
+    color: #fff;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: var(--font-body);
+    letter-spacing: 0.02em;
+    transition: opacity 0.18s, transform 0.15s;
+    box-shadow: 0 4px 16px rgba(99,102,241,0.3);
+    margin-top: 4px;
+  }
+  
+  .btnSubmit:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+  .btnSubmit:disabled { opacity: 0.45; cursor: not-allowed; }
+  
+  .terms {
+    text-align: center;
+    font-size: 0.68rem;
+    color: var(--color-muted);
+  }
+  
+  /* ── OTP verify step ── */
+  .verifyIcon {
+    font-size: 2.4rem;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  
+  .emailHighlight {
+    color: var(--color-text);
+  }
+  
+  .otpRow {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 4px 0;
+  }
+  
+  .otpBox {
+    width: 48px;
+    height: 56px;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-family: var(--font-num);
+    background: var(--color-surface);
+    border: 2px solid var(--color-border2);
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    outline: none;
+    caret-color: transparent;
+    transition: border-color 0.18s, box-shadow 0.18s;
+  }
+  
+  .otpBox:focus {
+    border-color: var(--color-indigo);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+  }
+  
+  .otpBoxFilled {
+    border-color: var(--color-indigo);
+    background: rgba(99,102,241,0.07);
+  }
+  
+  .resendRow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .resendLabel {
+    font-size: 0.78rem;
+    color: var(--color-muted);
+  }
+  
+  .resendBtn {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-indigo);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-body);
+    padding: 0;
+    transition: opacity 0.18s;
+  }
+  
+  .resendBtn:disabled { color: var(--color-muted); cursor: default; }
+  .resendBtn:not(:disabled):hover { opacity: 0.75; }
+  
+  .backBtn {
+    width: 100%;
+    background: none;
+    border: none;
+    font-size: 0.78rem;
+    color: var(--color-muted);
+    cursor: pointer;
+    font-family: var(--font-body);
+    padding: 4px 0;
+    text-align: center;
+    transition: color 0.15s;
+  }
+  .backBtn:hover { color: var(--color-text2); }
+  
+  /* ── Mobile ── */
+  @media (max-width: 768px) {
+    .left    { display: none; }
+    .divider { display: none; }
+  
+    .right {
+      flex: 1;
+      min-height: 100vh;
+      padding: 32px 24px;
+      align-items: flex-start;
+      padding-top: 48px;
+    }
+  
+    .mobileLogoRow { display: flex; }
+  
+    .otpBox { width: 42px; height: 50px; font-size: 1.3rem; }
+    .otpRow { gap: 8px; }
+  }

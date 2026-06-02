@@ -42,26 +42,28 @@ app.get("/health", (_, res) => {
 
 /*
 |--------------------------------------------------------------------------
-| API Routes
+| API Routes  — all prefixed with /api to match frontend expectations
 |--------------------------------------------------------------------------
 */
 
-app.use("/auth", authRoutes);
+app.use("/api/auth", authRoutes);
 
-app.use("/trade", tradeRoutes);
+app.use("/api/trade", tradeRoutes);
 
-app.use("/portfolio", portfolioRoutes);
+app.use("/api/portfolio", portfolioRoutes);
 
-app.use("/stocks", stockRoutes);
+app.use("/api/stocks", stockRoutes);
 
-app.use("/chart", chartRoutes);
+app.use("/api/chart", chartRoutes);
 
-app.use("/prices", priceRoutes);
+app.use("/api/prices", priceRoutes);
 
-app.use("/watchlist", watchlistRoutes);
+app.use("/api/watchlist", watchlistRoutes);
 
-app.use("/scenarios", scenarioRoutes);
-app.use("/digest", digestRoutes);
+app.use("/api/scenarios", scenarioRoutes);
+
+app.use("/api/digest", digestRoutes);
+
 /*
 |--------------------------------------------------------------------------
 | 404 Handler

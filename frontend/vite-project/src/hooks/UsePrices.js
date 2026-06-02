@@ -1,10 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 
-const BACKEND =
-  import.meta.env.MODE === "production"
-    ? import.meta.env.VITE_API_URL
-    : "http://localhost:3000";
+// Socket.io connects to root of the backend (no /api suffix)
+const SOCKET_URL =
+  import.meta.env.VITE_SOCKET_URL ||
+  (import.meta.env.MODE === "production"
+    ? "https://stock-sim-43d8.onrender.com"
+    : "http://localhost:3000");
+
+// REST calls go through the /api prefix
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.MODE === "production"
+    ? "https://stock-sim-43d8.onrender.com/api"
+    : "/api");
 
 export const usePrices = () => {
   const [prices, setPrices] = useState([]);
@@ -13,7 +22,7 @@ export const usePrices = () => {
   const prevRef = useRef({});
 
   useEffect(() => {
-    const socket = io(BACKEND, {
+    const socket = io(SOCKET_URL, {
       path: "/socket.io",
       transports: ["websocket", "polling"],
       withCredentials: true,
@@ -53,7 +62,7 @@ export const usePrices = () => {
     });
 
     const token = localStorage.getItem("token");
-    fetch(`${BACKEND}/prices`, {
+    fetch(`${API_URL}/prices`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then((r) => (r.ok ? r.json() : null))

@@ -21,8 +21,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: ["http://localhost:5173",
-      "https://stock-sim-gray.vercel.app"],
+    origin: ["http://localhost:5173", "https://stock-sim-iota.vercel.app"],
     credentials: true,
   })
 );

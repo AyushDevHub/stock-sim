@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { usePrices } from "../hooks/UsePrices.js";
 import api from "../services/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -17,20 +17,116 @@ const COLORS = [
   "#ec4899",
 ];
 
+/* ── Order types ── */
+const ORDER_TYPES = [
+  { value: "MARKET", label: "Market", extra: [] },
+  { value: "LIMIT", label: "Limit", extra: ["limitPrice"] },
+  { value: "STOP_LOSS", label: "Stop-Loss (SL)", extra: ["stopPrice"] },
+  {
+    value: "STOP_LOSS_LIMIT",
+    label: "SL-Limit",
+    extra: ["stopPrice", "limitPrice"],
+  },
+  { value: "TRAILING_STOP", label: "Trailing Stop", extra: ["trailAmount"] },
+  {
+    value: "TRAILING_STOP_LIMIT",
+    label: "Trail SL-Limit",
+    extra: ["trailAmount", "limitPrice"],
+  },
+  {
+    value: "BRACKET",
+    label: "Bracket (BO)",
+    extra: ["bracketTarget", "bracketStopLoss"],
+  },
+  { value: "OCO", label: "OCO", extra: ["limitPrice", "stopPrice"] },
+];
+
+/* ── Validity ── */
+const VALIDITY = [
+  { value: "DAY", label: "DAY", tip: "Valid for today's session only" },
+  { value: "GTC", label: "GTC", tip: "Good Till Cancelled" },
+  { value: "IOC", label: "IOC", tip: "Immediate or Cancel" },
+  { value: "FOK", label: "FOK", tip: "Fill or Kill" },
+];
+
+/* ── Brokerage estimate (mirrors backend) ── */
+function estimateBrokerage(tradeValue, side) {
+  if (!tradeValue || tradeValue <= 0) return null;
+  const brokerage = Math.min(tradeValue * 0.0003, 20);
+  const stt = tradeValue * 0.001;
+  const txn = tradeValue * 0.0000322;
+  const sebi = tradeValue * 0.000001;
+  const stamp = side === "buy" ? tradeValue * 0.00015 : 0;
+  const gst = (brokerage + txn + sebi) * 0.18;
+  const total = brokerage + stt + txn + sebi + stamp + gst;
+  return { brokerage, stt, txn, sebi, stamp, gst, total };
+}
+
+function fmtPrice(n, dec = 2) {
+  if (n == null) return "—";
+  return (
+    "₹" +
+    Number(n).toLocaleString("en-IN", {
+      minimumFractionDigits: dec,
+      maximumFractionDigits: dec,
+    })
+  );
+}
+
 export default function Trade() {
   const { prices, loading } = usePrices();
   const { user, login } = useAuth();
+
+  /* stock selection */
   const [selected, setSelected] = useState(null);
-  const [side, setSide] = useState("buy");
-  const [qty, setQty] = useState("");
   const [query, setQuery] = useState("");
-  const [msg, setMsg] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
   const [mobilePanel, setMobilePanel] = useState(false);
 
+  /* order fields */
+  const [side, setSide] = useState("buy");
+  const [qty, setQty] = useState("");
+  const [orderType, setOrderType] = useState("MARKET");
+  const [validity, setValidity] = useState("DAY");
+  const [extra, setExtra] = useState({
+    limitPrice: "",
+    stopPrice: "",
+    trailAmount: "",
+    trailPercent: "",
+    bracketTarget: "",
+    bracketStopLoss: "",
+  });
+  const [showBreakdown, setShowBreakdown] = useState(false);
+
+  /* feedback */
+  const [msg, setMsg] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+
   const stock = prices.find((p) => p.symbol === selected);
-  const total = stock?.price && qty ? stock.price * Number(qty) : null;
   const up = (stock?.change ?? 0) >= 0;
+  const selectedType = ORDER_TYPES.find((t) => t.value === orderType);
+  const extraFields = selectedType?.extra ?? [];
+
+  const setExtraField = (k, v) => setExtra((p) => ({ ...p, [k]: v }));
+
+  /* execution price for estimate */
+  const execPrice = useMemo(() => {
+    if (
+      ["LIMIT", "STOP_LOSS_LIMIT", "TRAILING_STOP_LIMIT", "OCO"].includes(
+        orderType
+      )
+    )
+      return parseFloat(extra.limitPrice) || stock?.price;
+    return stock?.price;
+  }, [orderType, extra.limitPrice, stock?.price]);
+
+  const tradeValue = execPrice && qty ? execPrice * Number(qty) : null;
+  const brokEst = estimateBrokerage(tradeValue, side);
+  const netValue =
+    tradeValue && brokEst
+      ? side === "buy"
+        ? tradeValue + brokEst.total
+        : tradeValue - brokEst.total
+      : null;
 
   const filtered = prices.filter(
     (s) =>
@@ -43,6 +139,16 @@ export default function Trade() {
     setSelected(sym);
     setQty("");
     setMsg(null);
+    setOrderType("MARKET");
+    setValidity("DAY");
+    setExtra({
+      limitPrice: "",
+      stopPrice: "",
+      trailAmount: "",
+      trailPercent: "",
+      bracketTarget: "",
+      bracketStopLoss: "",
+    });
     setMobilePanel(true);
   };
 
@@ -52,15 +158,30 @@ export default function Trade() {
     setSubmitting(true);
     setMsg(null);
     try {
-      const { data } = await api.post(`/trade/${side}`, {
+      const payload = {
         symbol: selected,
         quantity: Number(qty),
+        orderType,
+        validity,
+      };
+      extraFields.forEach((f) => {
+        if (extra[f]) payload[f] = Number(extra[f]);
       });
+
+      const { data } = await api.post(`/trade/${side}`, payload);
+
+      const execed = data.order?.status === "EXECUTED" || !data.order?.status;
       setMsg({
         type: "success",
-        text: `✓ ${
-          side === "buy" ? "Bought" : "Sold"
-        } ${qty} × ${selected} @ ₹${data.order.price}`,
+        text: execed
+          ? `✓ ${
+              side === "buy" ? "Bought" : "Sold"
+            } ${qty} × ${selected} @ ${fmtPrice(
+              data.order?.price
+            )} · Charges: ${fmtPrice(
+              data.order?.brokerage?.total ?? data.order?.brokerage
+            )}`
+          : `Order placed (${data.order?.status}) — ${selectedType?.label}`,
       });
       const stored = JSON.parse(localStorage.getItem("user") || "{}");
       const updated = { ...stored, balance: data.balance };
@@ -80,7 +201,7 @@ export default function Trade() {
   return (
     <div className={styles.page}>
       <div className={styles.inner}>
-        {/* Page header */}
+        {/* ── Page header ── */}
         <div className={styles.pageHeader}>
           <div>
             <h1 className={styles.pageTitle}>Trade</h1>
@@ -225,7 +346,7 @@ export default function Trade() {
               </div>
             ) : (
               <div className={styles.orderCard}>
-                {/* Stock info */}
+                {/* ── Stock header ── */}
                 <div className={styles.orderStock}>
                   <div>
                     <div className={styles.orderSym}>{selected}</div>
@@ -233,11 +354,7 @@ export default function Trade() {
                   </div>
                   <div className={styles.orderPriceBlock}>
                     <div className={styles.orderPrice}>
-                      ₹
-                      {(stock?.price ?? 0).toLocaleString("en-IN", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
+                      {fmtPrice(stock?.price)}
                     </div>
                     <div
                       className={`${styles.orderChange} ${
@@ -250,7 +367,7 @@ export default function Trade() {
                   </div>
                 </div>
 
-                {/* OHLC */}
+                {/* ── OHLC ── */}
                 <div className={styles.ohlc}>
                   {[
                     ["O", stock?.open],
@@ -271,33 +388,170 @@ export default function Trade() {
                   ))}
                 </div>
 
-                {/* Buy / Sell toggle */}
+                {/* ── Buy / Sell toggle ── */}
                 <div className={styles.sideToggle}>
-                  <button
-                    className={`${styles.sideBtn} ${
-                      side === "buy" ? styles.sideBuy : ""
-                    }`}
-                    onClick={() => {
-                      setSide("buy");
-                      setMsg(null);
-                    }}
-                  >
-                    Buy
-                  </button>
-                  <button
-                    className={`${styles.sideBtn} ${
-                      side === "sell" ? styles.sideSell : ""
-                    }`}
-                    onClick={() => {
-                      setSide("sell");
-                      setMsg(null);
-                    }}
-                  >
-                    Sell
-                  </button>
+                  {["buy", "sell"].map((s) => (
+                    <button
+                      key={s}
+                      className={`${styles.sideBtn} ${
+                        side === s
+                          ? s === "buy"
+                            ? styles.sideBuy
+                            : styles.sideSell
+                          : ""
+                      }`}
+                      onClick={() => {
+                        setSide(s);
+                        setMsg(null);
+                      }}
+                    >
+                      {s.charAt(0).toUpperCase() + s.slice(1)}
+                    </button>
+                  ))}
                 </div>
 
-                {/* Qty */}
+                {/* ── Order Type ── */}
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>ORDER TYPE</label>
+                  <select
+                    value={orderType}
+                    onChange={(e) => setOrderType(e.target.value)}
+                    className={styles.select}
+                  >
+                    {ORDER_TYPES.map((t) => (
+                      <option key={t.value} value={t.value}>
+                        {t.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* ── Validity ── */}
+                <div className={styles.fieldGroup}>
+                  <label className={styles.fieldLabel}>VALIDITY</label>
+                  <div className={styles.validityRow}>
+                    {VALIDITY.map((v) => (
+                      <button
+                        key={v.value}
+                        title={v.tip}
+                        className={`${styles.validBtn} ${
+                          validity === v.value ? styles.validActive : ""
+                        }`}
+                        onClick={() => setValidity(v.value)}
+                      >
+                        {v.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── Limit price ── */}
+                {extraFields.includes("limitPrice") && (
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.fieldLabel}>LIMIT PRICE (₹)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.05"
+                      placeholder="e.g. 2450.00"
+                      value={extra.limitPrice}
+                      onChange={(e) =>
+                        setExtraField("limitPrice", e.target.value)
+                      }
+                      className={styles.fieldInput}
+                    />
+                  </div>
+                )}
+
+                {/* ── Stop / trigger price ── */}
+                {extraFields.includes("stopPrice") && (
+                  <div className={styles.fieldGroup}>
+                    <label className={styles.fieldLabel}>
+                      STOP / TRIGGER PRICE (₹)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.05"
+                      placeholder="e.g. 2380.00"
+                      value={extra.stopPrice}
+                      onChange={(e) =>
+                        setExtraField("stopPrice", e.target.value)
+                      }
+                      className={styles.fieldInput}
+                    />
+                  </div>
+                )}
+
+                {/* ── Trail amount ── */}
+                {extraFields.includes("trailAmount") && (
+                  <div className={styles.twoCol}>
+                    <div className={styles.fieldGroup}>
+                      <label className={styles.fieldLabel}>TRAIL ₹</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.05"
+                        placeholder="e.g. 50"
+                        value={extra.trailAmount}
+                        onChange={(e) =>
+                          setExtraField("trailAmount", e.target.value)
+                        }
+                        className={styles.fieldInput}
+                      />
+                    </div>
+                    <div className={styles.fieldGroup}>
+                      <label className={styles.fieldLabel}>TRAIL %</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="e.g. 2"
+                        value={extra.trailPercent}
+                        onChange={(e) =>
+                          setExtraField("trailPercent", e.target.value)
+                        }
+                        className={styles.fieldInput}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Bracket target + stop-loss ── */}
+                {extraFields.includes("bracketTarget") && (
+                  <div className={styles.twoCol}>
+                    <div className={styles.fieldGroup}>
+                      <label className={styles.fieldLabel}>TARGET (₹)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.05"
+                        placeholder="Target"
+                        value={extra.bracketTarget}
+                        onChange={(e) =>
+                          setExtraField("bracketTarget", e.target.value)
+                        }
+                        className={styles.fieldInput}
+                      />
+                    </div>
+                    <div className={styles.fieldGroup}>
+                      <label className={styles.fieldLabel}>STOP-LOSS (₹)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.05"
+                        placeholder="Stop"
+                        value={extra.bracketStopLoss}
+                        onChange={(e) =>
+                          setExtraField("bracketStopLoss", e.target.value)
+                        }
+                        className={styles.fieldInput}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Quantity ── */}
                 <div className={styles.qtyRow}>
                   <div className={styles.qtyLabel}>Quantity</div>
                   <div className={styles.qtyInput}>
@@ -330,21 +584,63 @@ export default function Trade() {
                   </div>
                 </div>
 
-                {/* Total */}
-                {total !== null && (
+                {/* ── Estimated total ── */}
+                {tradeValue != null && (
                   <div className={styles.totalRow}>
-                    <span className={styles.totalLabel}>Estimated Total</span>
+                    <span className={styles.totalLabel}>Est. trade value</span>
                     <span className={styles.totalVal}>
-                      ₹
-                      {total.toLocaleString("en-IN", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
+                      {fmtPrice(tradeValue)}
                     </span>
                   </div>
                 )}
 
-                {/* Message */}
+                {/* ── Brokerage breakdown ── */}
+                {brokEst && tradeValue > 0 && (
+                  <div className={styles.brokerageBox}>
+                    <button
+                      className={styles.brokerageToggle}
+                      onClick={() => setShowBreakdown((b) => !b)}
+                    >
+                      <span className={styles.brokLabel}>CHARGES</span>
+                      <div className={styles.brokRight}>
+                        <span className={styles.brokTotal}>
+                          {fmtPrice(brokEst.total)}
+                        </span>
+                        <span className={styles.chevron}>
+                          {showBreakdown ? "▲" : "▼"}
+                        </span>
+                      </div>
+                    </button>
+                    {showBreakdown && (
+                      <div className={styles.breakdown}>
+                        {[
+                          ["Brokerage", brokEst.brokerage],
+                          ["STT", brokEst.stt],
+                          ["Exchange (NSE)", brokEst.txn],
+                          ["SEBI charges", brokEst.sebi],
+                          ...(side === "buy"
+                            ? [["Stamp duty", brokEst.stamp]]
+                            : []),
+                          ["GST (18%)", brokEst.gst],
+                        ].map(([label, val]) => (
+                          <div key={label} className={styles.bRow}>
+                            <span>{label}</span>
+                            <span>{fmtPrice(val, 4)}</span>
+                          </div>
+                        ))}
+                        <div className={styles.bDivider} />
+                        <div className={`${styles.bRow} ${styles.bRowNet}`}>
+                          <span>
+                            {side === "buy" ? "Net payable" : "Net proceeds"}
+                          </span>
+                          <span>{fmtPrice(netValue)}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Message ── */}
                 {msg && (
                   <div
                     className={`${styles.msg} ${
@@ -357,7 +653,7 @@ export default function Trade() {
                   </div>
                 )}
 
-                {/* Submit */}
+                {/* ── Submit ── */}
                 <button
                   className={`${styles.submitBtn} ${
                     side === "buy" ? styles.submitBuy : styles.submitSell
@@ -367,9 +663,9 @@ export default function Trade() {
                 >
                   {submitting
                     ? "Processing…"
-                    : side === "buy"
-                    ? `Buy ${selected}`
-                    : `Sell ${selected}`}
+                    : `${side === "buy" ? "Buy" : "Sell"} ${selected} · ${
+                        selectedType?.label
+                      }`}
                 </button>
 
                 <div className={styles.balLine}>

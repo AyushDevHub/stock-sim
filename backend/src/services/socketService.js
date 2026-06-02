@@ -2,14 +2,19 @@ import { Server } from "socket.io";
 
 let io = null;
 
-/**
- * Call once from server.js after creating the http server.
- * Returns the io instance in case you need it elsewhere.
- */
 export const initSocket = (httpServer) => {
+  const allowedOrigins = [
+    "http://localhost:5173",
+    "https://stock-sim-gray.vercel.app",
+    process.env.FRONTEND_URL,
+  ].filter(Boolean);
+
+  console.log("[Socket.io] Allowed origins:", allowedOrigins);
+
   io = new Server(httpServer, {
     cors: {
-      origin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
+      origin: allowedOrigins,
+      methods: ["GET", "POST"],
       credentials: true,
     },
   });
@@ -24,10 +29,6 @@ export const initSocket = (httpServer) => {
   return io;
 };
 
-/**
- * Broadcast latest prices to every connected client.
- * Called by pricePollerService after each refresh.
- */
 export const emitPrices = (prices) => {
   if (!io) return;
   io.emit("prices:update", { prices, updatedAt: Date.now() });

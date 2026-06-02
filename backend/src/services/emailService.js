@@ -1,62 +1,59 @@
-import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 dotenv.config();
 
 /**
- * Nodemailer transporter.
- *
- * For Gmail:
- *   1. Enable 2-Step Verification on your Google account
- *   2. Go to Google Account → Security → App Passwords → create one for "Mail"
- *   3. Set EMAIL_USER=you@gmail.com and EMAIL_PASS=the_16_char_app_password in .env
- *
- * For any other SMTP (Brevo, SendGrid, etc.) set all four EMAIL_* vars.
+ * Sends email via Brevo HTTP API (no SMTP — works on all hosting platforms).
+ * Falls back gracefully if API key is missing.
  */
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || "smtp.gmail.com",
-  port: Number(process.env.EMAIL_PORT) || 587,
-  secure: process.env.EMAIL_SECURE === "true", // true for port 465
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+export const sendEmail = async ({ to, subject, html, text }) => {
+  const apiKey = process.env.BREVO_API_KEY;
 
-/**
- * Verify SMTP connection on startup (logs, never crashes server).
- */
-export const verifyEmailConnection = async () => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.warn(
-      "[Email] EMAIL_USER / EMAIL_PASS not set — evening digest disabled"
-    );
-    return false;
+  if (!apiKey) {
+    console.warn("[Email] BREVO_API_KEY not set — skipping email to", to);
+    return null;
   }
-  try {
-    await transporter.verify();
-    console.log("[Email] SMTP connection verified ✓");
-    return true;
-  } catch (err) {
-    console.warn("[Email] SMTP verify failed:", err.message);
-    return false;
+
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "api-key": apiKey,
+    },
+    body: JSON.stringify({
+      sender: {
+        name: "StockSim",
+        email: process.env.EMAIL_FROM_ADDRESS || "noreply@stocksim.app",
+      },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+      textContent: text || subject,
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Brevo API error ${res.status}: ${err}`);
   }
+
+  const data = await res.json();
+  console.log(
+    "[Email] Sent via Brevo API to",
+    to,
+    "— messageId:",
+    data.messageId
+  );
+  return data;
 };
 
 /**
- * Send a single email.
- * @param {string} to          Recipient address
- * @param {string} subject     Email subject
- * @param {string} html        HTML body
- * @param {string} [text]      Plain-text fallback (auto-generated if omitted)
+ * Called on startup — just checks the API key is present.
  */
-export const sendEmail = async ({ to, subject, html, text }) => {
-  const from = process.env.EMAIL_FROM || `StockSim <${process.env.EMAIL_USER}>`;
-  const info = await transporter.sendMail({
-    from,
-    to,
-    subject,
-    html,
-    text: text || subject,
-  });
-  return info;
+export const verifyEmailConnection = async () => {
+  if (!process.env.BREVO_API_KEY) {
+    console.warn("[Email] BREVO_API_KEY not set — email disabled");
+    return false;
+  }
+  console.log("[Email] Brevo HTTP API ready ✓");
+  return true;
 };

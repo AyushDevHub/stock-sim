@@ -6,9 +6,8 @@ import { sendEmail } from "../services/emailService.js";
 const signToken = (userId) =>
   jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-const makeOTP = () => String(Math.floor(100000 + Math.random() * 900000)); // 6 digits
+const makeOTP = () => String(Math.floor(100000 + Math.random() * 900000));
 
-// ── OTP email HTML ────────────────────────────────────────────────────────────
 function otpHtml(username, otp) {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -17,45 +16,42 @@ function otpHtml(username, otp) {
 <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px">
   <tr><td align="center">
     <table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%">
-
-      <!-- Header -->
       <tr><td style="background:#131924;border-radius:16px 16px 0 0;padding:28px 32px 24px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.07)">
         <span style="width:36px;height:36px;background:#6366f1;border-radius:9px;display:inline-block;text-align:center;line-height:36px;font-weight:900;font-size:16px;color:#fff">S</span>
         <div style="font-size:18px;font-weight:800;color:#e8edf5;margin-top:10px">StockSim</div>
         <div style="font-size:12px;color:#5a7080;letter-spacing:0.1em;text-transform:uppercase;margin-top:4px">Email Verification</div>
       </td></tr>
-
-      <!-- Body -->
       <tr><td style="background:#131924;padding:32px">
         <div style="font-size:16px;font-weight:600;color:#e8edf5;margin-bottom:8px">Hey ${username} 👋</div>
         <div style="font-size:14px;color:#b0bec8;line-height:1.6;margin-bottom:28px">
           Use the code below to verify your email and activate your StockSim account.
           The code expires in <strong style="color:#e8edf5">15 minutes</strong>.
         </div>
-
-        <!-- OTP box -->
         <div style="background:#1a2332;border:2px solid #6366f1;border-radius:14px;padding:24px;text-align:center;margin-bottom:28px">
           <div style="font-size:11px;font-weight:600;color:#6366f1;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:12px">Your Verification Code</div>
           <div style="font-size:40px;font-weight:900;color:#e8edf5;letter-spacing:0.18em;font-family:monospace">${otp}</div>
         </div>
-
         <div style="font-size:13px;color:#5a7080;line-height:1.6">
           If you didn't create a StockSim account, you can safely ignore this email.
           <br/>This code can only be used once.
         </div>
       </td></tr>
-
-      <!-- Footer -->
       <tr><td style="background:#0f1923;border-radius:0 0 16px 16px;padding:18px 32px;text-align:center;border-top:1px solid rgba(255,255,255,0.05)">
         <div style="font-size:12px;color:#5a7080">StockSim — Virtual Paper Trading · No real money involved</div>
       </td></tr>
-
     </table>
   </td></tr>
 </table>
 </body>
 </html>`;
 }
+
+// Fire-and-forget email — never blocks the HTTP response
+const sendEmailAsync = (opts) => {
+  sendEmail(opts).catch((err) =>
+    console.error("[Email] Failed to send:", err.message)
+  );
+};
 
 // ── REGISTER ──────────────────────────────────────────────────────────────────
 
@@ -69,9 +65,9 @@ export const registerUser = async (req, res) => {
       return res.status(409).json({ message: "Email already registered" });
 
     const otp = makeOTP();
-    const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 min
+    const expiry = new Date(Date.now() + 15 * 60 * 1000);
 
-    const user = await User.create({
+    await User.create({
       username,
       email,
       password: await bcrypt.hash(password, 10),
@@ -80,18 +76,19 @@ export const registerUser = async (req, res) => {
       emailOTPExpiry: expiry,
     });
 
-    // Send verification email
-    await sendEmail({
+    // Respond immediately — don't wait for email
+    res.status(201).json({
+      message: "Account created — check your email for the verification code",
+      requiresVerification: true,
+      email,
+    });
+
+    // Send email in background after responding
+    sendEmailAsync({
       to: email,
       subject: `${otp} is your StockSim verification code`,
       html: otpHtml(username, otp),
       text: `Your StockSim verification code is: ${otp}\n\nExpires in 15 minutes.`,
-    });
-
-    res.status(201).json({
-      message: "Account created — check your email for the verification code",
-      requiresVerification: true,
-      email, // return so frontend can show "code sent to ****@gmail.com"
     });
   } catch (error) {
     console.error("Register error:", error);
@@ -133,13 +130,11 @@ export const verifyEmailOTP = async (req, res) => {
     if (user.emailOTP !== String(otp).trim())
       return res.status(400).json({ message: "Incorrect code — try again" });
 
-    // Mark verified, clear OTP
     user.emailVerified = true;
     user.emailOTP = undefined;
     user.emailOTPExpiry = undefined;
     await user.save();
 
-    // Auto-login after verification
     res.json({
       message: "Email verified successfully!",
       token: signToken(user._id),
@@ -177,14 +172,16 @@ export const resendOTP = async (req, res) => {
     user.emailOTPExpiry = new Date(Date.now() + 15 * 60 * 1000);
     await user.save();
 
-    await sendEmail({
+    // Respond immediately
+    res.json({ message: "New code sent — check your inbox" });
+
+    // Send in background
+    sendEmailAsync({
       to: email,
       subject: `${otp} is your new StockSim verification code`,
       html: otpHtml(user.username, otp),
       text: `Your new StockSim verification code is: ${otp}\n\nExpires in 15 minutes.`,
     });
-
-    res.json({ message: "New code sent — check your inbox" });
   } catch (error) {
     res
       .status(500)
@@ -206,7 +203,6 @@ export const loginUser = async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password)))
       return res.status(401).json({ message: "Invalid credentials" });
 
-    // Block unverified users from logging in
     if (!user.emailVerified) {
       return res.status(403).json({
         message: "Please verify your email before logging in",

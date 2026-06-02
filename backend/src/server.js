@@ -26,20 +26,14 @@ initSocket(httpServer);
 mongoose
   .connect(MONGO_URI)
   .then(async () => {
-    console.log("✅ MongoDB connected");
-
-    // TEMPORARILY DISABLED
-    // await startPricePoller(POLL_INTERVAL);
-    // initDigestScheduler();
-
-    console.log("✅ Starting server...");
-
-    httpServer.listen(PORT, () => {
-      console.log(`✅ Server + Socket.io running on port ${PORT}`);
-    });
+    console.log("MongoDB connected");
+    await startPricePoller(POLL_INTERVAL);
+    initDigestScheduler(); // starts 6:30 PM IST cron
+    httpServer.listen(PORT, () =>
+      console.log(`Server + Socket.io running on port ${PORT}`)
+    );
   })
   .catch((err) => {
-    console.error("❌ DB connection failed:");
-    console.error(err);
+    console.error("DB connection failed:", err.message);
     process.exit(1);
   });

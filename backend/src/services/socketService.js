@@ -5,8 +5,7 @@ let io = null;
 export const initSocket = (httpServer) => {
   const allowedOrigins = [
     "http://localhost:5173",
-    "https://stock-sim-gray.vercel.app",
-    process.env.FRONTEND_URL,
+    "https://stock-sim-iota.vercel.app",
   ].filter(Boolean);
 
   console.log("[Socket.io] Allowed origins:", allowedOrigins);

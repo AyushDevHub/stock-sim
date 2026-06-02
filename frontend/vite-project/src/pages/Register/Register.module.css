@@ -246,6 +246,118 @@
   line-height: 1.6;
 }
 
+/* ─── Keep all your existing Register.module.css styles ───
+   Add ONLY these new classes at the bottom of your file    */
+
+/* Verify step icon */
+.verifyIcon {
+  font-size: 2.4rem;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+/* Email highlighted in subtitle */
+.emailHighlight {
+  color: var(--color-text);
+}
+
+/* ── OTP input row ── */
+.otpRow {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 8px 0 4px;
+}
+
+.otpBox {
+  width: 46px;
+  height: 54px;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 800;
+  font-family: var(--font-num);
+  background: var(--color-bg);
+  border: 2px solid var(--color-border2);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  outline: none;
+  caret-color: transparent;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.otpBox:focus {
+  border-color: var(--color-indigo);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.otpBoxFilled {
+  border-color: var(--color-indigo);
+  background: rgba(99, 102, 241, 0.06);
+}
+
+/* Success message */
+.success {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  color: var(--color-green);
+}
+
+/* Resend row */
+.resendRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.resendLabel {
+  font-size: 0.78rem;
+  color: var(--color-muted);
+}
+
+.resendBtn {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-indigo);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  padding: 0;
+  transition: opacity 0.18s;
+}
+
+.resendBtn:disabled {
+  color: var(--color-muted);
+  cursor: default;
+}
+
+.resendBtn:not(:disabled):hover {
+  opacity: 0.75;
+}
+
+/* Back link */
+.backBtn {
+  width: 100%;
+  background: none;
+  border: none;
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  cursor: pointer;
+  font-family: var(--font-body);
+  padding: 4px 0;
+  text-align: center;
+  transition: color 0.15s;
+}
+
+.backBtn:hover {
+  color: var(--color-text2);
+}
+
 @media (max-width: 768px) {
   .right {
     display: none;

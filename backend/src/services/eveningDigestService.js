@@ -444,7 +444,11 @@ export async function sendDigestToUser(user) {
 export async function runEveningDigest() {
   console.log("[Digest] Starting evening digest run…");
   try {
-    const users = await User.find({ email: { $exists: true, $ne: "" } }).lean();
+    // Only send to users who verified their email — filters out fake addresses
+    const users = await User.find({
+      email: { $exists: true, $ne: "" },
+      emailVerified: true,
+    }).lean();
     console.log(`[Digest] Sending to ${users.length} user(s)`);
     // Stagger sends by 200ms each to avoid SMTP rate limits
     for (let i = 0; i < users.length; i++) {

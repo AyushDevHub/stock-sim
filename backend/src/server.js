@@ -12,8 +12,11 @@ const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 const POLL_INTERVAL = parseInt(process.env.POLL_INTERVAL_MS) || 10000;
 
+console.log("NODE_ENV:", process.env.NODE_ENV);
+console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
+
 if (!MONGO_URI) {
-  console.error("MONGO_URI is not defined in .env");
+  console.error("MONGO_URI missing");
   process.exit(1);
 }
 

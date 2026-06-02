@@ -53,7 +53,7 @@ export const usePrices = () => {
     });
 
     const token = localStorage.getItem("token");
-    fetch(`${BACKEND}/api/prices`, {
+    fetch(`${BACKEND}/prices`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then((r) => (r.ok ? r.json() : null))

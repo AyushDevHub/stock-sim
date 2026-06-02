@@ -58,6 +58,7 @@ export default function ScenarioArena() {
 
   const [scenario, setScenario] = useState(null);
   const [prices, setPrices] = useState({});
+  const [tickDir, setTickDir] = useState({}); // { SYM: 'up'|'down' } — cleared after flash
   const [cash, setCash] = useState(100000);
   const [holdings, setHoldings] = useState({});
   const [orders, setOrders] = useState([]);
@@ -252,8 +253,16 @@ export default function ScenarioArena() {
       newPrices[sym] = Math.max(1, old + noise + trend + shock);
     });
 
+    // Compute tick direction for flash animation
+    const dirs = {};
+    STOCKS.forEach((sym) => {
+      dirs[sym] = newPrices[sym] >= pricesRef.current[sym] ? "up" : "down";
+    });
+
     pricesRef.current = newPrices;
     setPrices({ ...newPrices });
+    setTickDir(dirs);
+    setTimeout(() => setTickDir({}), 620);
     setElapsed(t);
 
     if (t >= sc.duration) endScenario();
@@ -740,90 +749,96 @@ export default function ScenarioArena() {
 
       {/* ── HUD ─────────────────────────────────────────────────────────── */}
       <div className={styles.hud}>
-        <div className={styles.hudLeft}>
-          <span className={styles.scenarioName}>{scenario.name}</span>
-          {currentPhase && (
-            <span
-              className={`${styles.phaseLabel} ${
-                styles[`phaseLabel_${currentPhase.id}`]
-              }`}
-            >
-              {currentPhase.name}
-            </span>
-          )}
-          <div className={styles.timerBar}>
-            <div className={styles.timerTrack}>
-              <div
-                className={`${styles.timerFill} ${
-                  crashActive ? styles.timerFillCrash : ""
+        {/* Top row: scenario info + sentiment + start/live */}
+        <div className={styles.hudTop}>
+          <div className={styles.hudLeft}>
+            <span className={styles.scenarioName}>{scenario.name}</span>
+            {currentPhase && (
+              <span
+                className={`${styles.phaseLabel} ${
+                  styles[`phaseLabel_${currentPhase.id}`]
                 }`}
-                style={{ width: `${progress}%` }}
-              />
+              >
+                {currentPhase.name}
+              </span>
+            )}
+            <div className={styles.timerBar}>
+              <div className={styles.timerTrack}>
+                <div
+                  className={`${styles.timerFill} ${
+                    crashActive ? styles.timerFillCrash : ""
+                  }`}
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <span className={styles.timerNum}>{fmtTime(timeLeft)}</span>
             </div>
-            <span className={styles.timerNum}>{fmtTime(timeLeft)}</span>
+          </div>
+
+          <div className={styles.hudRight}>
+            <div className={styles.sentimentMeter}>
+              <div className={styles.sentLbl}>Sentiment</div>
+              <div className={styles.sentBar}>
+                <div
+                  className={styles.sentFill}
+                  style={{ width: `${sentiment}%`, background: sentimentColor }}
+                />
+              </div>
+              <div
+                className={styles.sentLabel}
+                style={{ color: sentimentColor }}
+              >
+                {sentimentLabel}
+              </div>
+            </div>
+
+            {!running && !finished && (
+              <button className={styles.launchBtn} onClick={startScenario}>
+                ▶ START
+              </button>
+            )}
+            {running && (
+              <div className={styles.livePill}>
+                <span className={styles.liveDot} /> LIVE
+              </div>
+            )}
           </div>
         </div>
 
-        <div className={styles.hudCenter}>
-          <div className={styles.hudStat}>
+        {/* Stats strip — always visible including on mobile */}
+        <div className={styles.statsStrip}>
+          <div className={styles.statCell}>
             <div
-              className={`${styles.hudVal} ${
+              className={`${styles.statVal} ${
                 returnPct >= 0 ? styles.green : styles.red
               }`}
             >
               {returnPct >= 0 ? "+" : ""}
               {returnPct.toFixed(2)}%
             </div>
-            <div className={styles.hudLbl}>RETURN</div>
+            <div className={styles.statLbl}>Return</div>
           </div>
-          <div className={styles.hudStat}>
-            <div className={styles.hudVal}>
+          <div className={styles.statCell}>
+            <div className={styles.statVal}>
               ₹{Math.round(totalAssets).toLocaleString("en-IN")}
             </div>
-            <div className={styles.hudLbl}>TOTAL ASSETS</div>
+            <div className={styles.statLbl}>Total Assets</div>
           </div>
-          <div className={styles.hudStat}>
-            <div className={styles.hudVal}>
+          <div className={styles.statCell}>
+            <div className={styles.statVal}>
               ₹{Math.round(cash).toLocaleString("en-IN")}
             </div>
-            <div className={styles.hudLbl}>CASH</div>
+            <div className={styles.statLbl}>Cash</div>
           </div>
-          {/* COVID: live psych indicator */}
           {isCovidScenario && running && (
-            <div className={styles.hudStat}>
+            <div className={styles.statCell}>
               <div
-                className={styles.hudVal}
+                className={styles.statVal}
                 style={{ color: psychState.color }}
               >
                 {psychState.icon} {psychState.title}
               </div>
-              <div className={styles.hudLbl}>YOUR BEHAVIOR</div>
-            </div>
-          )}
-        </div>
-
-        <div className={styles.hudRight}>
-          <div className={styles.sentimentMeter}>
-            <div className={styles.sentLbl}>MARKET SENTIMENT</div>
-            <div className={styles.sentBar}>
-              <div
-                className={styles.sentFill}
-                style={{ width: `${sentiment}%`, background: sentimentColor }}
-              />
-            </div>
-            <div className={styles.sentLabel} style={{ color: sentimentColor }}>
-              {sentimentLabel}
-            </div>
-          </div>
-
-          {!running && !finished && (
-            <button className={styles.launchBtn} onClick={startScenario}>
-              ▶ START
-            </button>
-          )}
-          {running && (
-            <div className={styles.livePill}>
-              <span className={styles.liveDot} /> LIVE
+              <div className={styles.statLbl}>Behavior</div>
             </div>
           )}
         </div>
@@ -857,13 +872,14 @@ export default function ScenarioArena() {
             const unrealizedPnl = held > 0 ? (price - avgPx) * held : 0;
             const up = change >= 0;
 
+            const dir = tickDir[sym]; // "up" | "down" | undefined
+
             return (
               <div
                 key={sym}
-                className={`${styles.stockCard}
-                  ${up ? styles.stockUp : styles.stockDown}
-                  ${crashActive ? styles.stockCrash : ""}
-                `}
+                className={`${styles.stockCard} ${
+                  crashActive ? styles.stockCrash : ""
+                }`}
               >
                 <div className={styles.stockTop}>
                   <span className={styles.stockSym}>{sym}</span>
@@ -875,7 +891,15 @@ export default function ScenarioArena() {
                     {up ? "▲" : "▼"} {Math.abs(changePct)}%
                   </span>
                 </div>
-                <div className={styles.stockPrice}>
+                <div
+                  className={`${styles.stockPrice} ${
+                    dir === "up"
+                      ? styles.priceFlashUp
+                      : dir === "down"
+                      ? styles.priceFlashDown
+                      : ""
+                  }`}
+                >
                   ₹{price.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
                 </div>
                 {held > 0 && (

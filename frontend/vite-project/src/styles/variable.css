@@ -20,11 +20,8 @@
      --font-body  : all readable text — headings, labels, paragraphs
      --font-num   : prices, percentages, numbers (monospace for alignment)
   */
-  --font-body:    "Inter", system-ui, -apple-system, sans-serif;
-  --font-display: "Inter", system-ui, sans-serif;
-  --font-mono:    "DM Mono", ui-monospace, monospace;   /* legacy alias */
-  --font-num:     "DM Mono", ui-monospace, monospace;   /* use for prices */
-
+  --font-body: "Sora", sans-serif;
+  /* --font-num:  "IBM Plex Mono", monospace; */
   /* ── Radii ── */
   --radius-sm: 6px;
   --radius-md: 10px;

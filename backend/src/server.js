@@ -10,12 +10,10 @@ dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
-// Default 60s — one server fetches, all users receive via Socket.io
-const POLL_INTERVAL = parseInt(process.env.POLL_INTERVAL_MS) || 60_000;
+const POLL_INTERVAL = parseInt(process.env.POLL_INTERVAL_MS) || 60000;
 
 console.log("NODE_ENV:", process.env.NODE_ENV);
 console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
-console.log(`Poll interval: ${POLL_INTERVAL / 1000}s`);
 
 if (!MONGO_URI) {
   console.error("MONGO_URI missing");
@@ -29,8 +27,8 @@ mongoose
   .connect(MONGO_URI)
   .then(async () => {
     console.log("MongoDB connected");
-    await startPricePoller(POLL_INTERVAL); // single shared poller for all users
-    initDigestScheduler();
+    await startPricePoller(POLL_INTERVAL);
+    initDigestScheduler(); // starts 6:30 PM IST cron
     httpServer.listen(PORT, () =>
       console.log(`Server + Socket.io running on port ${PORT}`)
     );

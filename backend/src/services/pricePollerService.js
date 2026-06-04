@@ -137,7 +137,7 @@ const refreshPrices = async () => {
           console.warn(
             `[PricePoller] 429 hit. Backing off ${Math.round(
               waitMs / 1000
-            )}s ` + `— retry at ${new Date(backoffUntil).toLocaleTimeString()}`
+            )}s — retry at ${new Date(backoffUntil).toLocaleTimeString()}`
           );
 
           emitRateLimit({ retryAfterMs: waitMs, retryAt: backoffUntil });

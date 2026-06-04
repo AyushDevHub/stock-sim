@@ -60,6 +60,7 @@ function AppInner() {
             </PublicRoute>
           }
         />
+
         <Route
           path="/dashboard"
           element={
@@ -118,9 +119,11 @@ function AppInner() {
             </Protected>
           }
         />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
+      {/* Global rate-limit banner — visible on every page */}
       <RateLimitBanner rateLimit={rateLimit} onClear={clearRateLimit} />
     </>
   );

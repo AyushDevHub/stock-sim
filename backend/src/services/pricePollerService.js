@@ -7,19 +7,22 @@ const yahooFinance = new YahooFinance({ suppressNotices: ["yahooSurvey"] });
 const toTicker = (s) =>
   s.includes(".") ? s.toUpperCase() : `${s.toUpperCase()}.NS`;
 
-// In-memory price cache
+// ─── In-memory price cache ────────────────────────────────────────────────────
+// Single source of truth for all users. Never wiped on rate-limit — stale
+// prices stay visible in the UI until fresh ones arrive.
 const priceCache = new Map();
 
 let isPolling = false;
 let pollInterval = null;
 
-// Rate-limit backoff state
+// ─── Rate-limit backoff state ─────────────────────────────────────────────────
 let backoffUntil = 0;
 let backoffMs = 0;
-const BASE_BACKOFF_MS = 60_000;
-const MAX_BACKOFF_MS = 30 * 60_000;
-const JITTER_MS = 10_000; // up to 10s random jitter so we don't slam Yahoo the instant backoff expires
+const BASE_BACKOFF_MS = 3 * 60_000; // 3 min — Yahoo needs more than 60s
+const MAX_BACKOFF_MS = 30 * 60_000; // 30 min hard cap
+const JITTER_MS = 15_000; // +0–15 s random so retries don't slam in sync
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 const chunk = (arr, size) => {
   const out = [];
   for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
@@ -40,6 +43,7 @@ const calcBackoffMs = (err) => {
     return Math.min(Number(retryAfterSec) * 1000, MAX_BACKOFF_MS) + jitter;
   }
 
+  // Exponential backoff — doubles each consecutive 429, caps at MAX
   backoffMs = backoffMs
     ? Math.min(backoffMs * 2, MAX_BACKOFF_MS)
     : BASE_BACKOFF_MS;
@@ -51,12 +55,13 @@ const is429 = (err) =>
   err?.response?.status === 429 ||
   err?.status === 429;
 
+// ─── Core poll ────────────────────────────────────────────────────────────────
 const refreshPrices = async () => {
   if (Date.now() < backoffUntil) {
-    const remainingMs = backoffUntil - Date.now();
+    const remaining = backoffUntil - Date.now();
     console.log(
       `[PricePoller] Rate-limited — skipping tick. Retry in ${Math.ceil(
-        remainingMs / 1000
+        remaining / 1000
       )}s`
     );
     return;
@@ -75,12 +80,10 @@ const refreshPrices = async () => {
     let updated = 0;
     let rateLimitHit = false;
 
-    const batches = chunk(tickers, 20);
-
-    for (const batch of batches) {
+    for (const batch of chunk(tickers, 20)) {
       if (Date.now() < backoffUntil) {
         console.log(
-          `[PricePoller] Rate-limit triggered mid-run — aborting remaining batches`
+          "[PricePoller] Rate-limit mid-run — aborting remaining batches"
         );
         break;
       }
@@ -91,7 +94,6 @@ const refreshPrices = async () => {
           {},
           { validateResult: false }
         );
-
         const quotes = Array.isArray(results) ? results : [results];
 
         for (const q of quotes) {
@@ -126,64 +128,67 @@ const refreshPrices = async () => {
 
           updated++;
         }
-
-        // Reset backoff on a successful batch
-        backoffMs = 0;
       } catch (batchErr) {
         if (is429(batchErr)) {
           const waitMs = calcBackoffMs(batchErr);
           backoffUntil = Date.now() + waitMs;
           rateLimitHit = true;
 
-          const retryAt = new Date(backoffUntil);
           console.warn(
-            `[PricePoller] 429 Rate-limited. Backing off for ${Math.round(
+            `[PricePoller] 429 hit. Backing off ${Math.round(
               waitMs / 1000
-            )}s — retry at ${retryAt.toLocaleTimeString()}`
+            )}s ` + `— retry at ${new Date(backoffUntil).toLocaleTimeString()}`
           );
 
-          emitRateLimit({
-            retryAfterMs: waitMs,
-            retryAt: backoffUntil,
-          });
-
+          emitRateLimit({ retryAfterMs: waitMs, retryAt: backoffUntil });
           break;
         } else {
-          console.warn(`[PricePoller] Batch failed: ${batchErr.message}`);
+          console.warn(`[PricePoller] Batch error: ${batchErr.message}`);
         }
       }
 
-      await sleep(500);
+      await sleep(500); // polite inter-batch delay
     }
 
+    // ── Only reset backoff after a FULLY successful cycle ──────────────────
     if (!rateLimitHit) {
+      backoffMs = 0;
       console.log(
-        `[PricePoller] Updated ${updated}/${
-          stocks.length
-        } prices at ${new Date().toLocaleTimeString()}`
+        `[PricePoller] ✓ Updated ${updated}/${stocks.length} prices ` +
+          `at ${new Date().toLocaleTimeString()}`
       );
     }
 
+    // ── Push to all clients if anything was updated ────────────────────────
+    // We always push from cache — even partial updates — so UI never blanks.
     if (updated > 0) {
-      // Clear rate limit state — prices are flowing again
-      clearRateLimit();
-      emitPrices(getAllPrices());
+      clearRateLimit(); // prices are flowing → hide the banner
+      emitPrices(getAllPrices()); // broadcast to all connected sockets
     }
   } catch (err) {
-    console.error("[PricePoller] Error refreshing prices:", err.message);
+    // DB or other hard failure — log but don't crash the poller
+    console.error("[PricePoller] Unexpected error:", err.message);
   }
 };
 
-export const startPricePoller = async (intervalMs = 30_000) => {
+// ─── Public API ───────────────────────────────────────────────────────────────
+
+/**
+ * Start the shared price poller.
+ * Called ONCE on server boot — all users receive updates via Socket.io.
+ * No user interaction triggers a Yahoo request.
+ */
+export const startPricePoller = async (intervalMs = 60_000) => {
   if (isPolling) return;
   isPolling = true;
 
   console.log(
-    `[PricePoller] Starting — pushing via Socket.io every ${intervalMs / 1000}s`
+    `[PricePoller] Starting — polling Yahoo every ${
+      intervalMs / 1000
+    }s, pushing via Socket.io`
   );
 
-  await refreshPrices();
-
+  await refreshPrices(); // warm cache immediately on boot
   pollInterval = setInterval(refreshPrices, intervalMs);
 };
 
@@ -193,7 +198,18 @@ export const stopPricePoller = () => {
   console.log("[PricePoller] Stopped");
 };
 
+/** Full cache — used by REST /api/prices (HTTP fallback for new connections) */
 export const getAllPrices = () => Array.from(priceCache.values());
 export const getPrice = (symbol) =>
   priceCache.get(symbol.toUpperCase()) || null;
 export const getCacheSize = () => priceCache.size;
+
+/** Current backoff state — exposed so REST can return it too */
+export const getRateLimitState = () =>
+  backoffUntil > Date.now()
+    ? {
+        limited: true,
+        retryAt: backoffUntil,
+        retryAfterMs: backoffUntil - Date.now(),
+      }
+    : { limited: false };

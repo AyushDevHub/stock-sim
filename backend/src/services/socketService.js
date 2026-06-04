@@ -2,8 +2,10 @@ import { Server } from "socket.io";
 
 let io = null;
 
-// Store current rate-limit state so new connections get it immediately
-let activRateLimit = null;
+// ─── Shared state pushed to every new connection ──────────────────────────────
+// Stored here so clients that connect DURING a rate-limit period immediately
+// receive the banner — they don't have to wait for the next poller tick.
+let activeRateLimit = null; // { retryAfterMs, retryAt, message } | null
 
 export const initSocket = (httpServer) => {
   const allowedOrigins = [
@@ -24,11 +26,20 @@ export const initSocket = (httpServer) => {
   io.on("connection", (socket) => {
     console.log(`[Socket.io] Client connected: ${socket.id}`);
 
-    // If we're currently rate-limited, immediately tell the new client
-    // so they see the banner without waiting for the next poller tick
-    if (activRateLimit && activRateLimit.retryAt > Date.now()) {
-      socket.emit("prices:rateLimit", activRateLimit);
+    // ── Hydrate new client with current state ──────────────────────────────
+    // 1. If we're rate-limited right now, tell the client immediately
+    if (activeRateLimit && activeRateLimit.retryAt > Date.now()) {
+      socket.emit("prices:rateLimit", activeRateLimit);
     }
+
+    // 2. Send the full cached price snapshot so the UI is never blank
+    //    (imported lazily to avoid circular dep at module init time)
+    import("./pricePollerService.js").then(({ getAllPrices }) => {
+      const prices = getAllPrices();
+      if (prices.length) {
+        socket.emit("prices:update", { prices, updatedAt: Date.now() });
+      }
+    });
 
     socket.on("disconnect", () => {
       console.log(`[Socket.io] Client disconnected: ${socket.id}`);
@@ -38,31 +49,34 @@ export const initSocket = (httpServer) => {
   return io;
 };
 
+// ─── Broadcast helpers ────────────────────────────────────────────────────────
+
+/** Push fresh prices to every connected client */
 export const emitPrices = (prices) => {
   if (!io) return;
   io.emit("prices:update", { prices, updatedAt: Date.now() });
 };
 
 /**
- * Emit a rate-limit notification to all connected clients and cache it
- * so new connections receive it too.
+ * Broadcast a rate-limit event to all clients AND cache it so
+ * clients that connect later also receive it immediately.
  */
 export const emitRateLimit = ({ retryAfterMs, retryAt }) => {
   if (!io) return;
-  activRateLimit = {
+  activeRateLimit = {
     retryAfterMs,
     retryAt,
     message: "Yahoo Finance rate limit hit. Prices will resume automatically.",
   };
-  io.emit("prices:rateLimit", activRateLimit);
+  io.emit("prices:rateLimit", activeRateLimit);
 };
 
 /**
- * Clear the cached rate-limit state. Called by pricePollerService
- * when a successful price fetch comes through.
+ * Clear the cached rate-limit state.
+ * Called by pricePollerService when a successful price fetch completes.
  */
 export const clearRateLimit = () => {
-  activRateLimit = null;
+  activeRateLimit = null;
 };
 
 export const getIO = () => io;

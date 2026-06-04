@@ -21,9 +21,7 @@ export const usePrices = () => {
   const prevRef = useRef({});
 
   // Called by RateLimitBanner when countdown ends or user dismisses
-  const clearRateLimit = useCallback(() => {
-    setRateLimit(null);
-  }, []);
+  const clearRateLimit = useCallback(() => setRateLimit(null), []);
 
   useEffect(() => {
     const socket = io(SOCKET_URL, {
@@ -32,6 +30,7 @@ export const usePrices = () => {
       withCredentials: true,
     });
 
+    // ── Direction enrichment ──────────────────────────────────────────────
     const enrich = (rawPrices) => {
       const enriched = rawPrices.map((p) => {
         const prev = prevRef.current[p.symbol];
@@ -50,6 +49,7 @@ export const usePrices = () => {
       return enriched;
     };
 
+    // ── Socket events ─────────────────────────────────────────────────────
     socket.on("connect", () => {
       setConnected(true);
       console.log("[usePrices] Socket connected");
@@ -61,33 +61,47 @@ export const usePrices = () => {
     });
 
     socket.on("prices:update", ({ prices: raw }) => {
+      // Always update — never blank the UI on a rate-limit recovery
       setPrices(enrich(raw));
       setLoading(false);
-      // Prices are flowing again — clear any rate limit banner
-      setRateLimit(null);
+      setRateLimit(null); // prices flowing → clear banner
     });
 
     socket.on("prices:rateLimit", (payload) => {
-      console.warn("[usePrices] Rate limit hit:", payload);
+      console.warn("[usePrices] Rate limit:", payload);
+      // Keep existing prices visible — just show the banner
       setRateLimit(payload);
+      setLoading(false);
     });
 
+    // ── HTTP fallback ─────────────────────────────────────────────────────
+    // Fetches the cache snapshot so the page isn't blank during socket
+    // handshake. Also picks up rateLimit state if we're currently throttled.
     const token = localStorage.getItem("token");
     fetch(`${API_URL}/prices`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (data?.prices?.length) {
-          setPrices(enrich(data.prices));
+        if (!data) return;
+        // Hydrate prices if we have them (keeps UI populated before socket fires)
+        if (data.prices?.length) {
+          setPrices((prev) => (prev.length ? prev : enrich(data.prices)));
           setLoading(false);
+        }
+        // If server says we're rate-limited, show banner right away
+        if (data.rateLimit?.limited) {
+          setRateLimit({
+            retryAt: data.rateLimit.retryAt,
+            retryAfterMs: data.rateLimit.retryAfterMs,
+            message:
+              "Yahoo Finance rate limit hit. Prices will resume automatically.",
+          });
         }
       })
       .catch(() => {});
 
-    return () => {
-      socket.disconnect();
-    };
+    return () => socket.disconnect();
   }, []);
 
   return { prices, loading, connected, rateLimit, clearRateLimit };

@@ -19,6 +19,7 @@ export const usePrices = () => {
   const [prices, setPrices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState(false);
+  const [rateLimit, setRateLimit] = useState(null); // { retryAfterMs, retryAt }
   const prevRef = useRef({});
 
   useEffect(() => {
@@ -59,6 +60,14 @@ export const usePrices = () => {
     socket.on("prices:update", ({ prices: raw }) => {
       setPrices(enrich(raw));
       setLoading(false);
+      // Clear rate limit banner when prices start flowing again
+      setRateLimit(null);
+    });
+
+    // Handle rate-limit notification from backend
+    socket.on("prices:rateLimit", (payload) => {
+      console.warn("[usePrices] Rate limit hit:", payload);
+      setRateLimit(payload);
     });
 
     const token = localStorage.getItem("token");
@@ -79,5 +88,5 @@ export const usePrices = () => {
     };
   }, []);
 
-  return { prices, loading, connected };
+  return { prices, loading, connected, rateLimit };
 };

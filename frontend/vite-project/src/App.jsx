@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import Navbar from "./components/Navbar/Navbar.jsx";
+import RateLimitBanner from "./components/RateLimitBanner/RateLimitBanner.jsx";
+import { usePrices } from "./hooks/UsePrices.js";
 import Landing from "./pages/Landing/Landing.jsx";
 import Login from "./pages/Login/Login.jsx";
 import Register from "./pages/Register/Register.jsx";
@@ -30,9 +32,12 @@ const AppLayout = ({ children }) => (
   </>
 );
 
-export default function App() {
+// Inner component that has access to AuthProvider context
+function AppInner() {
+  const { rateLimit } = usePrices();
+
   return (
-    <AuthProvider>
+    <>
       <Routes>
         {/* Public-only routes — logged-in users get sent to dashboard */}
         <Route
@@ -122,6 +127,17 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
+      {/* Global rate-limit popup — visible on any page */}
+      <RateLimitBanner rateLimit={rateLimit} />
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppInner />
     </AuthProvider>
   );
 }

@@ -33,4 +33,17 @@ export const emitPrices = (prices) => {
   io.emit("prices:update", { prices, updatedAt: Date.now() });
 };
 
+/**
+ * Emit a rate-limit notification to all connected clients.
+ * @param {{ retryAfterMs: number, retryAt: number }} payload
+ */
+export const emitRateLimit = ({ retryAfterMs, retryAt }) => {
+  if (!io) return;
+  io.emit("prices:rateLimit", {
+    retryAfterMs,
+    retryAt,
+    message: "Yahoo Finance rate limit hit. Prices will resume automatically.",
+  });
+};
+
 export const getIO = () => io;

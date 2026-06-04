@@ -1,6 +1,6 @@
 import YahooFinance from "yahoo-finance2";
 import Stock from "../models/Stock.js";
-import { emitPrices } from "./socketService.js";
+import { emitPrices, emitRateLimit } from "./socketService.js";
 
 const yahooFinance = new YahooFinance({ suppressNotices: ["yahooSurvey"] });
 
@@ -13,6 +13,12 @@ const priceCache = new Map();
 let isPolling = false;
 let pollInterval = null;
 
+// Rate-limit backoff state
+let backoffUntil = 0; // timestamp when we're allowed to poll again
+let backoffMs = 0; // current backoff duration
+const BASE_BACKOFF_MS = 60_000; // 1 minute base
+const MAX_BACKOFF_MS = 30 * 60_000; // 30 minutes max
+
 // Split array into chunks
 const chunk = (arr, size) => {
   const out = [];
@@ -20,10 +26,48 @@ const chunk = (arr, size) => {
   return out;
 };
 
-// Sleep helper for rate-limit spacing
+// Sleep helper
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * Parse Retry-After header or pick exponential backoff.
+ * Yahoo returns 429 with optional Retry-After (seconds).
+ */
+const calcBackoffMs = (err) => {
+  // Try to read Retry-After from the error (yahoo-finance2 may attach it)
+  const retryAfterSec =
+    err?.response?.headers?.["retry-after"] ||
+    err?.headers?.["retry-after"] ||
+    null;
+
+  if (retryAfterSec) {
+    return Math.min(Number(retryAfterSec) * 1000, MAX_BACKOFF_MS);
+  }
+
+  // Exponential backoff: double each time, cap at MAX
+  backoffMs = backoffMs
+    ? Math.min(backoffMs * 2, MAX_BACKOFF_MS)
+    : BASE_BACKOFF_MS;
+  return backoffMs;
+};
+
+const is429 = (err) =>
+  err?.message?.includes("429") ||
+  err?.response?.status === 429 ||
+  err?.status === 429;
+
 const refreshPrices = async () => {
+  // Still in backoff window — skip this tick
+  if (Date.now() < backoffUntil) {
+    const remainingMs = backoffUntil - Date.now();
+    console.log(
+      `[PricePoller] Rate-limited — skipping tick. Retry in ${Math.ceil(
+        remainingMs / 1000
+      )}s`
+    );
+    return;
+  }
+
   try {
     const stocks = await Stock.find().select("symbol").lean();
     if (!stocks.length) return;
@@ -35,20 +79,26 @@ const refreshPrices = async () => {
     });
 
     let updated = 0;
+    let rateLimitHit = false;
 
-    // Batch into groups of 20 — one HTTP call per batch instead of 102
     const batches = chunk(tickers, 20);
 
     for (const batch of batches) {
+      // Re-check backoff between batches
+      if (Date.now() < backoffUntil) {
+        console.log(
+          `[PricePoller] Rate-limit triggered mid-run — aborting remaining batches`
+        );
+        break;
+      }
+
       try {
-        // yahoo-finance2 accepts an array of symbols in a single call
         const results = await yahooFinance.quote(
           batch,
           {},
           { validateResult: false }
         );
 
-        // quote() returns array when given array, single obj when given string
         const quotes = Array.isArray(results) ? results : [results];
 
         for (const q of quotes) {
@@ -83,19 +133,45 @@ const refreshPrices = async () => {
 
           updated++;
         }
+
+        // Reset backoff on a successful batch
+        backoffMs = 0;
       } catch (batchErr) {
-        console.warn(`[PricePoller] Batch failed: ${batchErr.message}`);
+        if (is429(batchErr)) {
+          const waitMs = calcBackoffMs(batchErr);
+          backoffUntil = Date.now() + waitMs;
+          rateLimitHit = true;
+
+          const retryAt = new Date(backoffUntil);
+          console.warn(
+            `[PricePoller] 429 Rate-limited. Backing off for ${Math.round(
+              waitMs / 1000
+            )}s — retry at ${retryAt.toLocaleTimeString()}`
+          );
+
+          // Notify all connected clients
+          emitRateLimit({
+            retryAfterMs: waitMs,
+            retryAt: backoffUntil,
+          });
+
+          break; // stop processing remaining batches
+        } else {
+          console.warn(`[PricePoller] Batch failed: ${batchErr.message}`);
+        }
       }
 
-      // Small delay between batches to avoid hammering Yahoo
-      await sleep(300);
+      // Polite delay between batches
+      await sleep(500);
     }
 
-    console.log(
-      `[PricePoller] Updated ${updated}/${
-        stocks.length
-      } prices at ${new Date().toLocaleTimeString()}`
-    );
+    if (!rateLimitHit) {
+      console.log(
+        `[PricePoller] Updated ${updated}/${
+          stocks.length
+        } prices at ${new Date().toLocaleTimeString()}`
+      );
+    }
 
     if (updated > 0) {
       emitPrices(getAllPrices());
@@ -105,7 +181,7 @@ const refreshPrices = async () => {
   }
 };
 
-export const startPricePoller = async (intervalMs = 10000) => {
+export const startPricePoller = async (intervalMs = 30_000) => {
   if (isPolling) return;
   isPolling = true;
 

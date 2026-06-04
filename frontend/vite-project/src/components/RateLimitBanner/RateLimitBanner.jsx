@@ -1,10 +1,6 @@
 import { useState, useEffect } from "react";
 import styles from "./RateLimitBanner.module.css";
 
-/**
- * Formats a duration in milliseconds into a human-readable string.
- * e.g. 90000 → "1 minute 30 seconds"
- */
 const formatDuration = (ms) => {
   if (ms <= 0) return "a moment";
   const totalSec = Math.ceil(ms / 1000);
@@ -22,15 +18,15 @@ const formatDuration = (ms) => {
 
 /**
  * RateLimitBanner
- * Shows a dismissible popup when Yahoo Finance rate limits are hit.
  * Props:
- *   rateLimit: { retryAfterMs: number, retryAt: number, message: string } | null
+ *   rateLimit: { retryAfterMs, retryAt, message } | null
+ *   onClear: () => void  — called when countdown ends so parent clears rateLimit
  */
-export default function RateLimitBanner({ rateLimit }) {
+export default function RateLimitBanner({ rateLimit, onClear }) {
   const [remaining, setRemaining] = useState(0);
   const [dismissed, setDismissed] = useState(false);
 
-  // Reset dismissed state whenever a new rate limit event arrives
+  // Reset dismissed whenever a NEW rate limit event arrives
   useEffect(() => {
     if (rateLimit) {
       setDismissed(false);
@@ -38,19 +34,28 @@ export default function RateLimitBanner({ rateLimit }) {
     }
   }, [rateLimit]);
 
-  // Countdown ticker
+  // Countdown ticker — auto-dismisses when it hits zero
   useEffect(() => {
     if (!rateLimit || dismissed) return;
 
     const tick = () => {
       const left = Math.max(0, rateLimit.retryAt - Date.now());
       setRemaining(left);
+
+      if (left === 0) {
+        // Countdown done — hide banner and tell parent to clear state
+        // Small delay so user sees "Resuming" state briefly
+        setTimeout(() => {
+          setDismissed(true);
+          onClear?.();
+        }, 2000);
+      }
     };
 
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [rateLimit, dismissed]);
+  }, [rateLimit, dismissed, onClear]);
 
   if (!rateLimit || dismissed) return null;
 
@@ -59,7 +64,6 @@ export default function RateLimitBanner({ rateLimit }) {
   return (
     <div className={`${styles.overlay} ${isOver ? styles.resolved : ""}`}>
       <div className={styles.popup}>
-        {/* Icon */}
         <div className={styles.iconWrap}>
           <svg viewBox="0 0 24 24" fill="none" className={styles.icon}>
             <circle
@@ -81,7 +85,10 @@ export default function RateLimitBanner({ rateLimit }) {
 
         <button
           className={styles.closeBtn}
-          onClick={() => setDismissed(true)}
+          onClick={() => {
+            setDismissed(true);
+            onClear?.();
+          }}
           aria-label="Dismiss"
         >
           ✕

@@ -13,13 +13,11 @@ import Portfolio from "./pages/Portfolio/Portfolio.jsx";
 import Scenarios from "./pages/Scenarios/Scenarios.jsx";
 import ScenarioArena from "./pages/Scenarios/ScenarioArena.jsx";
 
-// Redirects logged-in users away from public-only pages (landing, login, register)
 const PublicRoute = ({ children }) => {
   const { isAuth } = useAuth();
   return isAuth ? <Navigate to="/dashboard" replace /> : children;
 };
 
-// Redirects unauthenticated users to login
 const Protected = ({ children }) => {
   const { isAuth } = useAuth();
   return isAuth ? children : <Navigate to="/login" replace />;
@@ -32,14 +30,12 @@ const AppLayout = ({ children }) => (
   </>
 );
 
-// Inner component that has access to AuthProvider context
 function AppInner() {
-  const { rateLimit } = usePrices();
+  const { rateLimit, clearRateLimit } = usePrices();
 
   return (
     <>
       <Routes>
-        {/* Public-only routes — logged-in users get sent to dashboard */}
         <Route
           path="/"
           element={
@@ -64,8 +60,6 @@ function AppInner() {
             </PublicRoute>
           }
         />
-
-        {/* Protected routes */}
         <Route
           path="/dashboard"
           element={
@@ -124,12 +118,10 @@ function AppInner() {
             </Protected>
           }
         />
-
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
-      {/* Global rate-limit popup — visible on any page */}
-      <RateLimitBanner rateLimit={rateLimit} />
+      <RateLimitBanner rateLimit={rateLimit} onClear={clearRateLimit} />
     </>
   );
 }

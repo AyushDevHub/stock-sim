@@ -1,14 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { io } from "socket.io-client";
 
-// Socket.io connects to root of the backend (no /api suffix)
 const SOCKET_URL =
   import.meta.env.VITE_SOCKET_URL ||
   (import.meta.env.MODE === "production"
     ? "https://stock-sim-43d8.onrender.com"
     : "http://localhost:3000");
 
-// REST calls go through the /api prefix
 const API_URL =
   import.meta.env.VITE_API_URL ||
   (import.meta.env.MODE === "production"
@@ -19,8 +17,13 @@ export const usePrices = () => {
   const [prices, setPrices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState(false);
-  const [rateLimit, setRateLimit] = useState(null); // { retryAfterMs, retryAt }
+  const [rateLimit, setRateLimit] = useState(null);
   const prevRef = useRef({});
+
+  // Called by RateLimitBanner when countdown ends or user dismisses
+  const clearRateLimit = useCallback(() => {
+    setRateLimit(null);
+  }, []);
 
   useEffect(() => {
     const socket = io(SOCKET_URL, {
@@ -60,11 +63,10 @@ export const usePrices = () => {
     socket.on("prices:update", ({ prices: raw }) => {
       setPrices(enrich(raw));
       setLoading(false);
-      // Clear rate limit banner when prices start flowing again
+      // Prices are flowing again — clear any rate limit banner
       setRateLimit(null);
     });
 
-    // Handle rate-limit notification from backend
     socket.on("prices:rateLimit", (payload) => {
       console.warn("[usePrices] Rate limit hit:", payload);
       setRateLimit(payload);
@@ -88,5 +90,5 @@ export const usePrices = () => {
     };
   }, []);
 
-  return { prices, loading, connected, rateLimit };
+  return { prices, loading, connected, rateLimit, clearRateLimit };
 };
